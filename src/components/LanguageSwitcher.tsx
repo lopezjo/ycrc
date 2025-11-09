@@ -6,16 +6,19 @@ export default function LanguageSwitcher() {
 
   // Only show the alternative language option
   const alternativeLanguage = language === 'en' ? 'es' : 'en'
-  const alternativeLabel = alternativeLanguage === 'es' ? 'Español' : 'English'
+  const alternativeLabel = alternativeLanguage === 'es' ? 'ES' : 'EN'
+  const alternativeFull = alternativeLanguage === 'es' ? 'Español' : 'English'
+  const flagEmoji = alternativeLanguage === 'es' ? '🇲🇽' : '🇺🇸'
 
   return (
     <div className="language-switcher">
       <button
         onClick={() => setLanguage(alternativeLanguage)}
         className="lang-button"
-        title={`Switch to ${alternativeLabel}`}
+        title={`Switch to ${alternativeFull}`}
       >
-        {alternativeLabel}
+        <span className="flag-icon">{flagEmoji}</span>
+        <span className="lang-code">{alternativeLabel}</span>
       </button>
     </div>
   )

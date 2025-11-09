@@ -4,10 +4,23 @@
 }
 
 .lang-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 12px;
   border: 2px solid #e0e0e0;
   border-radius: 20px;
   background: white;
+}
+
+.flag-icon {
+  font-size: 1.2em;
+  line-height: 1;
+}
+
+.lang-code {
+  font-weight: 600;
+  font-size: 0.9em;
   color: #666;
   font-size: 0.85rem;
   cursor: pointer;
