@@ -191,21 +191,17 @@ export default function ChatInterface() {
     setMessages([welcomeMessage])
   }
 
-  const askQuestionById = (questionId: string, showContext = true, isManualEdit = false) => {
-    console.log(`askQuestionById called with: questionId=${questionId}, isManualEdit=${isManualEdit}`)
-
+  const askQuestionById = (questionId: string, showContext = true, isManualEdit = false, fromProcessStep = false) => {
     const question = getQuestionById(questionFlow, questionId)
     if (!question) {
-      console.log('Question not found, showing resources')
       showEligibleResources()
       return
     }
 
-    // Check if we have a cached answer for this question (but not if user is manually editing)
+    // Check if we have a cached answer for this question (but not if user is manually editing or called from processStep)
     const cachedValue = answerCache[question.field]
-    console.log(`Question ${question.field}: cachedValue=${cachedValue}, isManualEdit=${isManualEdit}`)
     
-    if (!isManualEdit && cachedValue !== undefined && cachedValue !== null && cachedValue !== '') {
+    if (!isManualEdit && !fromProcessStep && cachedValue !== undefined && cachedValue !== null && cachedValue !== '') {
       // First show the question
       setMessages((prev: Message[]) => {
         const questionExists = prev.some(
@@ -262,42 +258,18 @@ export default function ChatInterface() {
             [question.field]: cachedValue
           })
           
-          console.log(`Auto-answered ${question.field} with value:`, cachedValue)
-          console.log('Updated responses:', updatedResponses)
-          
           return updatedResponses
         })
         
-        // Use a separate timeout for continuing to avoid race conditions
-        setTimeout(() => {
-          setResponses(currentResponses => {
-            const nextQuestionId = getNextQuestionId(questionFlow, currentResponses, question.id)
-            
-            console.log(`After auto-answering ${question.field}, next question ID:`, nextQuestionId)
-            console.log('Current responses:', currentResponses)
-            
-            if (nextQuestionId) {
-              setCurrentQuestionId(nextQuestionId)
-              setIsProcessing(false)
-              askQuestionById(nextQuestionId)
-            } else {
-              console.log('No more questions found, showing resources')
-              // All questions completed, show resources
-              setCurrentQuestionId('completed')
-              const classification = classifyAllResources(resources, currentResponses)
-              setSelectedResources(classification.eligible)
-              setIsProcessing(false)
-              setShowResources(true)
-            }
-            
-            return currentResponses // Don't modify responses, just read them
-          })
-        }, 200) // Longer delay to ensure state consistency
-      }, 500) // Delay to show the question first
+        // Mark this question as completed but don't continue automatically
+        setCurrentQuestionId(question.id)
+        setIsProcessing(false)
+      }, 200) // Short delay to show the question briefly
       
       return
     }
 
+    // No cached value - show question normally
     // Check if this question is already in the messages to prevent duplicates
     setMessages((prev: Message[]) => {
       const questionExists = prev.some(
@@ -362,24 +334,32 @@ export default function ChatInterface() {
       }
         
       // Update both the cleaned responses and the full answer cache
-      setResponses(cleanResponses({
+      const updated = cleanResponses({
         ...responses,
         [currentQuestion.field]: responseValue
-      }))
+      })
+      setResponses(updated)
       setAnswerCache((prev: UserResponse) => ({
         ...prev,
         [currentQuestion.field]: responseValue
       }))
-    }
-
-    if (editMode) {
-      // In edit mode, continue with question flow instead of showing resources immediately
-      console.log('Exiting edit mode and continuing with processNextStep')
-      setEditMode(false)
-      processNextStep()
+      
+      // Continue with updated responses
+      if (editMode) {
+        // In edit mode, continue with question flow instead of showing resources immediately
+        setEditMode(false)
+        processNextStep(updated)
+      } else {
+        processNextStep(updated)
+      }
     } else {
-      console.log('Normal mode, calling processNextStep')
-      processNextStep()
+      // No current question - use default flow
+      if (editMode) {
+        setEditMode(false)
+        processNextStep()
+      } else {
+        processNextStep()
+      }
     }
   }
 
@@ -405,6 +385,7 @@ export default function ChatInterface() {
     const currentQuestion = questionFlow[currentQuestionIndex]
     if (currentQuestion) {
       let responseValue: string | number | boolean = responseText
+      
       if (currentQuestion.type === 'number') {
         responseValue = parseInt(responseText) || 0
       } else if (currentQuestion.type === 'yesno') {
@@ -413,6 +394,7 @@ export default function ChatInterface() {
         // Normalize situation responses to standard categories
         responseValue = getPrimarySituation(responseText)
       }
+      
       const updated = cleanResponses({ ...responses, [currentQuestion.field]: responseValue })
       setResponses(updated)
       
@@ -425,9 +407,9 @@ export default function ChatInterface() {
       if (editMode) {
         // In edit mode, continue with question flow instead of showing resources immediately
         setEditMode(false)
-        processNextStep()
+        processNextStep(updated)
       } else {
-        processNextStep()
+        processNextStep(updated)
       }
       return // Early exit, as above does the work
     }
@@ -462,20 +444,44 @@ export default function ChatInterface() {
     }
   }
 
-  const processNextStep = () => {
-    const nextQuestionId = getNextQuestionId(questionFlow, responses, currentQuestionId)
-    
-    console.log(`processNextStep: currentQuestionId=${currentQuestionId}, nextQuestionId=${nextQuestionId}`)
-    console.log('Current responses:', responses)
-    
-    if (nextQuestionId) {
-      setCurrentQuestionId(nextQuestionId)
-      setIsProcessing(false)
-      askQuestionById(nextQuestionId)
-    } else {
-      console.log('processNextStep: No next question, showing resources')
-      showEligibleResources()
+  const processNextStep = (overrideResponses?: typeof responses) => {
+    const currentResponses = overrideResponses || responses
+    const processNextQuestionRecursive = (currentId: string, currentResponsesForFlow: typeof responses) => {
+      const nextQuestionId = getNextQuestionId(questionFlow, currentResponsesForFlow, currentId)
+      
+      if (!nextQuestionId) {
+        showEligibleResources()
+        return
+      }
+      
+      // Check if the next question has a cached answer
+      const nextQuestion = getQuestionById(questionFlow, nextQuestionId)
+      const cachedValue = answerCache[nextQuestion?.field || '']
+      
+      if (cachedValue !== undefined && cachedValue !== null && cachedValue !== '') {
+        // Update responses with cached value
+        const updatedResponses = cleanResponses({
+          ...currentResponsesForFlow,
+          [nextQuestion!.field]: cachedValue
+        })
+        
+        // Update state
+        setCurrentQuestionId(nextQuestionId)
+        setResponses(updatedResponses)
+        
+        // Continue processing with updated responses
+        setTimeout(() => {
+          processNextQuestionRecursive(nextQuestionId, updatedResponses)
+        }, 50)
+      } else {
+        // This question needs user input
+        setCurrentQuestionId(nextQuestionId)
+        setIsProcessing(false)
+        askQuestionById(nextQuestionId, true, false, true)
+      }
     }
+    
+    processNextQuestionRecursive(currentQuestionId, currentResponses)
   }
 
   const showEligibleResources = () => {
@@ -554,13 +560,19 @@ export default function ChatInterface() {
       const sliceIndex = hasContext ? questionMessageIndex - 1 : questionMessageIndex
       setMessages((prev: Message[]) => prev.slice(0, sliceIndex))
       
-      // Remove responses for this question AND all questions that come after it in the flow
-      const questionsToKeep = questionFlow.slice(0, originalQuestionIndex)
+      console.log(`Before edit - responses:`, responses)
+      console.log(`Eligible questions before edit:`, getEligibleQuestions(questionFlow, responses).map(q => q.field))
+      
+      // Remove responses for questions that come after this one in the flow (keep current question)
+      const questionsToKeep = questionFlow.slice(0, originalQuestionIndex + 1)
       const fieldsToKeep = questionsToKeep.map(q => q.field)
       
       const filteredResponses = Object.fromEntries(
         Object.entries(responses).filter(([key]) => fieldsToKeep.includes(key))
       )
+      
+      console.log(`After filtering - responses:`, filteredResponses)
+      console.log(`Eligible questions after filtering:`, getEligibleQuestions(questionFlow, filteredResponses).map(q => q.field))
       
       // Update only the responses (cache keeps ALL historical answers)
       setResponses(cleanResponses(filteredResponses))
@@ -568,6 +580,7 @@ export default function ChatInterface() {
       // Note: answerCache is NOT modified here - it preserves all historical answers
       
       setShowResources(false)
+      console.log(`About to call askQuestionById for edit: questionId=${question.id}, isManualEdit=true`)
       askQuestionById(question.id, true, true) // Pass true for isManualEdit
     }
   }
