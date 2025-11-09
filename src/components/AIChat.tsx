@@ -40,8 +40,8 @@ export default function AIChat({ onDataExtracted, onShowResources, initialRespon
       field: 'age',
       optional: true,
       quickActions: [
-        { label: { en: '13-17', es: '13-17' }, value: '16' },
-        { label: { en: '18-24', es: '18-24' }, value: '20' }
+        { label: { en: '13-17', es: '13-17' }, value: '13-17', numericValue: 16 },
+        { label: { en: '18-24', es: '18-24' }, value: '18-24', numericValue: 20 }
       ]
     },
     {
@@ -135,6 +135,10 @@ export default function AIChat({ onDataExtracted, onShowResources, initialRespon
     setInputValue('')
     setIsProcessing(true)
 
+    await processMessage(messageText)
+  }
+
+  const processMessage = async (messageText: string) => {
     try {
       // Handle onboarding questions first
       if (!useAI && onboardingStep < onboardingQuestions.length) {
@@ -153,10 +157,16 @@ export default function AIChat({ onDataExtracted, onShowResources, initialRespon
 
           // Save the response based on field type
           if (currentQuestion.field === 'age') {
-            // Try extracted age first, fallback to parsing the message
-            if (extraction.extractedData.age) {
+            // Check if this was a quick action button with a numericValue
+            const quickAction = currentQuestion.quickActions?.find(a => a.value === messageText)
+            if (quickAction && 'numericValue' in quickAction) {
+              // Use the numeric value for eligibility matching
+              updatedResponses.age = (quickAction as any).numericValue
+            } else if (extraction.extractedData.age) {
+              // Try extracted age from AI
               updatedResponses.age = extraction.extractedData.age
             } else {
+              // Try parsing the message directly
               const age = parseInt(messageText)
               if (!isNaN(age) && age > 0 && age < 100) {
                 updatedResponses.age = age
@@ -339,9 +349,22 @@ export default function AIChat({ onDataExtracted, onShowResources, initialRespon
     }
   }
 
-  const handleQuickResponse = (response: string) => {
-    setInputValue(response)
-    setTimeout(() => handleSend(), 100)
+  const handleQuickResponse = async (response: string) => {
+    // Directly send the response without updating input value
+    if (isProcessing) return
+
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      text: response,
+      sender: 'user',
+      timestamp: new Date()
+    }
+
+    setMessages(prev => [...prev, userMessage])
+    setIsProcessing(true)
+
+    // Handle onboarding or AI response
+    await processMessage(response)
   }
 
   return (
