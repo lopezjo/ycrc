@@ -45,7 +45,6 @@ export default function ChatInterface() {
   const [showResources, setShowResources] = useState(false)
   const [showConsent, setShowConsent] = useState(false)
   const [showSupport, setShowSupport] = useState(false)
-  const [isPaused, setIsPaused] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [distressDetected, setDistressDetected] = useState(false);
   const [showExport, setShowExport] = useState(false)
@@ -136,10 +135,10 @@ export default function ChatInterface() {
   }, [showResources])
 
   useEffect(() => {
-    if (!isPaused && !showConsent && !showSupport) {
+    if (!showConsent && !showSupport) {
       inputRef.current?.focus()
     }
-  }, [messages, isPaused, showConsent, showSupport])
+  }, [messages, showConsent, showSupport])
 
   const initializeChat = () => {
     const welcomeMessage: Message = {
@@ -213,7 +212,7 @@ export default function ChatInterface() {
   }
 
   const handleOptionSelect = (option: string) => {
-    if (isProcessing || isPaused) return
+    if (isProcessing) return
     if (!distressDetected && detectDistress(option)) {
       setDistressDetected(true);
       setShowSupport(true); // optional: open the support modal immediately
@@ -247,7 +246,7 @@ export default function ChatInterface() {
   }
 
   const handleSend = () => {
-    if (!inputValue.trim() || isProcessing || isPaused) return
+    if (!inputValue.trim() || isProcessing) return
     if (!distressDetected && detectDistress(inputValue)) {
       setDistressDetected(true);
       setShowSupport(true); // optional: open the support modal immediately
@@ -293,7 +292,7 @@ export default function ChatInterface() {
   }
 
   const handleSkip = () => {
-    if (isProcessing || isPaused) return
+    if (isProcessing) return
 
     if (!currentQuestion?.skippable) return
 
@@ -379,29 +378,6 @@ export default function ChatInterface() {
     }
   }
 
-  const handlePause = () => {
-    setIsPaused(true)
-    const pauseMessage: Message = {
-      id: `pause-${Date.now()}`,
-      text: t('pausedNotice'),
-      sender: 'assistant',
-      timestamp: new Date(),
-      type: 'support'
-    }
-    setMessages((prev: Message[]) => [...prev, pauseMessage])
-  }
-
-  const handleResume = () => {
-    setIsPaused(false)
-    const resumeMessage: Message = {
-      id: `resume-${Date.now()}`,
-      text: t('welcomeBack'),
-      sender: 'assistant',
-      timestamp: new Date()
-    }
-    setMessages((prev: Message[]) => [...prev, resumeMessage])
-  }
-
   const handleEditQuestion = (index: number) => {
     setEditMode(true)
     const question = questionFlow[index]
@@ -479,23 +455,6 @@ export default function ChatInterface() {
           >
             {t('needSupport')}
           </button>
-          {!isPaused ? (
-            <button 
-              onClick={handlePause} 
-              className="header-button pause-button"
-              title={t('pause')}
-            >
-              {t('pause')}
-            </button>
-          ) : (
-            <button 
-              onClick={handleResume} 
-              className="header-button resume-button"
-              title={t('resume')}
-            >
-              {t('resume')}
-            </button>
-          )}
           <button 
             onClick={() => setEditMode(!editMode)} 
             className={`header-button ${editMode ? 'active' : ''}`}
@@ -552,13 +511,8 @@ export default function ChatInterface() {
             </button>
           </div>
         )}
-        {isPaused && (
-          <div className="paused-notice">
-            {t('pausedNotice')}
-          </div>
-        )}
 
-        {currentQuestion && !showResources && !isPaused && (
+        {currentQuestion && !showResources && (
           <>
             {currentQuestion.type === 'multiple' && currentQuestion.options && (
               <div className="options-container">

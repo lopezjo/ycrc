@@ -96,8 +96,6 @@ export interface Translations {
   skip: string
   skipQuestion: string
   send: string
-  pause: string
-  resume: string
   edit: string
   exitEdit: string
   clear: string
@@ -139,9 +137,6 @@ export interface Translations {
   questionOf: string
   clickToEdit: string
   
-  // Pause
-  pausedNotice: string
-  welcomeBack: string
   
   // Clear data
   clearDataConfirm: string
@@ -163,7 +158,7 @@ export const translations = {
     
     supportTitle: 'Need Support Right Now?',
     supportIntro: 'If you\'re in crisis or need immediate help, here are resources available 24/7:',
-    supportRemember: 'Remember: It\'s okay to take a break. You can pause anytime and come back when you\'re ready. Your well-being comes first.',
+    supportRemember: 'Remember: It\'s okay to take a break. You can come back anytime when you\'re ready. Your well-being comes first.',
     
     welcomeMessage: 'Hey there. I\'m here to help you find resources that might work for you. Can you tell me a bit about what\'s going on right now? (For example: sleeping in your car, need a place to stay, looking for food, etc.)',
     
@@ -269,8 +264,6 @@ export const translations = {
     skip: 'Skip',
     skipQuestion: 'Skip this question',
     send: 'Send',
-    pause: '⏸ Pause',
-    resume: '▶ Resume',
     edit: '✏️ Edit',
     exitEdit: '✏️ Exit Edit',
     clear: '🗑️ Clear',
@@ -309,8 +302,6 @@ export const translations = {
     questionOf: 'Question {current} of {total}',
     clickToEdit: 'Click on any answered question below to edit it',
     
-    pausedNotice: '⏸ Conversation paused. Click \'Resume\' when you\'re ready to continue.',
-    welcomeBack: 'Welcome back! Ready to continue?',
     
     clearDataConfirm: 'Are you sure you want to clear all your data? This cannot be undone.'
   } as Translations,
@@ -436,8 +427,6 @@ export const translations = {
     skip: 'Omitir',
     skipQuestion: 'Omitir esta pregunta',
     send: 'Enviar',
-    pause: '⏸ Pausar',
-    resume: '▶ Reanudar',
     edit: '✏️ Editar',
     exitEdit: '✏️ Salir de Editar',
     clear: '🗑️ Limpiar',
@@ -475,9 +464,6 @@ export const translations = {
     
     questionOf: 'Pregunta {current} de {total}',
     clickToEdit: 'Haz clic en cualquier pregunta respondida a continuación para editarla',
-    
-    pausedNotice: '⏸ Conversación pausada. Haz clic en \'Reanudar\' cuando estés listo para continuar.',
-    welcomeBack: '¡Bienvenido de nuevo! ¿Listo para continuar?',
     
     clearDataConfirm: '¿Estás seguro de que quieres borrar todos tus datos? Esto no se puede deshacer.'
   } as Translations

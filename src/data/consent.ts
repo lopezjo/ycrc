@@ -36,7 +36,7 @@ function getConsentInfo(): ConsentInfo {
         ]
       : [
           'You can skip any question',
-          'You can pause and come back later',
+          'You can come back anytime',
           'You can edit your answers anytime',
           'You can delete your information',
           'You control what information is shared'

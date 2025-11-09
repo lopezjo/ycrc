@@ -8,7 +8,7 @@ A conversational web application designed to help homeless youth find resources 
 - **Contextual Questions**: Each question includes context explaining why it's being asked
 - **Eligibility Checking**: Automatically filters resources based on user responses
 - **Resource Presentation**: Displays relevant resources with contact information
-- **Trauma-Informed Design**: Pause, skip, edit functionality with support resources
+- **Trauma-Informed Design**: Skip, edit functionality with support resources
 - **Session Persistence**: Saves progress so youth can return later
 - **Bilingual Support**: Full English and Spanish translations
 - **Resource Detail Assessment**: Follow-up questions to identify barriers and understand what resources offer
