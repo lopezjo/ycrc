@@ -5,6 +5,20 @@ export function checkEligibility(resource: Resource, responses: UserResponse): b
   return result.eligible
 }
 
+// Add this function at the top of eligibility.ts
+function mapHousingDurationToCriteria(housingDuration: string): string {
+  switch (housingDuration?.toLowerCase()) {
+    case 'tonight only':
+    case 'a few days':
+    case 'weeks':
+      return 'short-term'
+    case 'months':
+      return 'long-term'
+    default:
+      return 'short-term' // Default to short-term if unknown
+  }
+}
+
 export function checkEligibilityDetailed(resource: Resource, responses: UserResponse): EligibilityResult {
   const criteria = resource.eligibility
   const reasons: string[] = []
@@ -106,12 +120,16 @@ export function checkEligibilityDetailed(resource: Resource, responses: UserResp
 
   // Check duration
   if (criteria.duration) {
-    const userDuration = String(responses.duration || '').toLowerCase()
-    if (!userDuration) {
+    const housingDuration = responses.housingDuration as string
+    if (!housingDuration) {
       missingInfo.push('duration of situation')
     } else {
-      if (!userDuration.includes(criteria.duration.toLowerCase())) {
-        reasons.push(`This program is for people who have been in this situation for: ${criteria.duration}`)
+      const mappedDuration = mapHousingDurationToCriteria(housingDuration)
+      if (mappedDuration !== criteria.duration) {
+        const durationText = criteria.duration === 'short-term' ? 
+          'short-term emergency housing' : 
+          'longer-term housing support'
+        reasons.push(`This program provides ${durationText}`)
       }
     }
   }
