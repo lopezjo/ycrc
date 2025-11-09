@@ -2,9 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import { Message, UserResponse, Resource } from '../types'
 import { questionFlow } from '../data/questions'
 import { resources } from '../data/resources'
-import { consentInfo } from '../data/consent'
 import { classifyAllResources } from '../utils/eligibility'
-import { saveSession, loadSession, clearSession, saveConsent, hasConsent, getUserId } from '../utils/session'
+import { saveSession, loadSession, clearSession, hasConsent, getUserId } from '../utils/session'
 import { 
   getNextQuestionId, 
   getQuestionById, 
@@ -16,7 +15,6 @@ import { getPrimarySituation } from '../utils/situationMapping'
 import { useLanguage } from '../i18n/LanguageContext'
 import MessageBubble from './MessageBubble'
 import ResourcesDisplay from './ResourcesDisplay'
-import ConsentModal from './ConsentModal'
 import ProgressIndicator from './ProgressIndicator'
 import SupportResources from './SupportResources'
 import DataExportModal from './DataExportModal'
@@ -67,7 +65,6 @@ export default function ChatInterface() {
     return cleanedResponses
   }
   const [showResources, setShowResources] = useState(false)
-  const [showConsent, setShowConsent] = useState(false)
   const [showSupport, setShowSupport] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [distressDetected, setDistressDetected] = useState(false);
@@ -94,10 +91,10 @@ export default function ChatInterface() {
     if (session && session.consentGiven) {
       setMessages(session.messages)
       setResponses(cleanResponses(session.responses))
-      
+
       // Determine the current question ID
       let currentQuestionIdFromSession = 'initial'
-      
+
       // Use stored question ID if available (new format)
       if (session.currentQuestionId) {
         currentQuestionIdFromSession = session.currentQuestionId
@@ -108,10 +105,10 @@ export default function ChatInterface() {
           currentQuestionIdFromSession = legacyQuestion.id
         }
       }
-      
+
       // Get the next question ID based on current responses
       const nextQuestionId = getNextQuestionId(questionFlow, session.responses, currentQuestionIdFromSession)
-      
+
       // Check if we should show resources or continue with questions
       if (nextQuestionId === null || isQuestionFlowComplete(questionFlow, session.responses, currentQuestionIdFromSession)) {
         // Flow is complete - show resources/results
@@ -125,7 +122,8 @@ export default function ChatInterface() {
         askQuestionById(nextQuestionId, false)
       }
     } else {
-      setShowConsent(true)
+      // No session, just initialize the chat
+      // Consent is handled at App level now
       initializeChat()
     }
   }, [])
@@ -176,10 +174,10 @@ export default function ChatInterface() {
   }, [showResources])
 
   useEffect(() => {
-    if (!showConsent && !showSupport) {
+    if (!showSupport) {
       inputRef.current?.focus()
     }
-  }, [messages, showConsent, showSupport])
+  }, [messages, showSupport])
 
   const initializeChat = () => {
     const welcomeMessage: Message = {
@@ -193,24 +191,9 @@ export default function ChatInterface() {
     setMessages([welcomeMessage])
   }
 
-  const handleConsentAccept = () => {
-    saveConsent(true)
-    setShowConsent(false)
-    if (messages.length === 0) {
-      initializeChat()
-    }
-  }
-
-  const handleConsentDecline = () => {
-    // They can still use the app, but we won't save their data
-    setShowConsent(false)
-    if (messages.length === 0) {
-      initializeChat()
-    }
-  }
-
   const askQuestionById = (questionId: string, showContext = true, isManualEdit = false) => {
     console.log(`askQuestionById called with: questionId=${questionId}, isManualEdit=${isManualEdit}`)
+
     const question = getQuestionById(questionFlow, questionId)
     if (!question) {
       console.log('Question not found, showing resources')
@@ -604,14 +587,6 @@ export default function ChatInterface() {
 
   return (
     <div className="chat-interface">
-      {showConsent && (
-        <ConsentModal
-          consentInfo={consentInfo}
-          onAccept={handleConsentAccept}
-          onDecline={handleConsentDecline}
-        />
-      )}
-
       {showSupport && (
         <SupportResources onClose={() => setShowSupport(false)} />
       )}

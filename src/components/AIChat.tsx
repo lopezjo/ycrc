@@ -99,7 +99,7 @@ export default function AIChat({ onDataExtracted, onShowResources, initialRespon
   }, [])
 
   useEffect(() => {
-    // Initial greeting
+    // Initial greeting - consent is handled at App level
     const greeting: Message = {
       id: 'ai-greeting',
       text: onboardingQuestions[0][language],

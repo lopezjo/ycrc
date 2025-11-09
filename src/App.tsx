@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ChatInterface from './components/ChatInterface'
 import AIChat from './components/AIChat'
 import ResourcesDisplay from './components/ResourcesDisplay'
+import ConsentModal from './components/ConsentModal'
 import { LanguageProvider, useLanguage } from './i18n/LanguageContext'
 import LanguageSwitcher from './components/LanguageSwitcher'
 import { UserResponse, Resource } from './types'
+import { saveConsent, hasConsent } from './utils/session'
+import { consentInfo } from './data/consent'
 import './App.css'
 
 type IntakeMode = 'ai' | 'structured'
@@ -16,6 +19,16 @@ function AppContent() {
   const [showAIResources, setShowAIResources] = useState(false)
   const [selectedResources, setSelectedResources] = useState<Resource[]>([])
   const [resourceAssessments, setResourceAssessments] = useState<{ [resourceId: string]: { [questionId: string]: any } }>({})
+  const [showConsent, setShowConsent] = useState(false)
+  const [consentChecked, setConsentChecked] = useState(false)
+
+  // Check for consent on mount - only once for the entire app
+  useEffect(() => {
+    if (!hasConsent()) {
+      setShowConsent(true)
+    }
+    setConsentChecked(true)
+  }, [])
 
   const handleModeSwitch = (newMode: IntakeMode) => {
     if (confirm(language === 'es'
@@ -25,8 +38,31 @@ function AppContent() {
     }
   }
 
+  const handleConsentAccept = () => {
+    saveConsent(true)
+    setShowConsent(false)
+  }
+
+  const handleConsentDecline = () => {
+    alert(language === 'es'
+      ? 'Entendemos. Puedes volver cuando estés listo.'
+      : 'We understand. You can come back when you\'re ready.')
+  }
+
+  // Don't render anything until consent check is complete
+  if (!consentChecked) {
+    return null
+  }
+
   return (
     <div className="app">
+      {showConsent && (
+        <ConsentModal
+          consentInfo={consentInfo}
+          onAccept={handleConsentAccept}
+          onDecline={handleConsentDecline}
+        />
+      )}
       <header className="app-header">
         <div className="header-top">
           <h1>{t('appTitle')}</h1>
