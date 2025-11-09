@@ -2,7 +2,16 @@ export interface Translations {
   // App
   appTitle: string
   appSubtitle: string
-  
+
+  // Landing/Mode Selection
+  landingWelcome: string
+  landingSubtitle: string
+  modeKnowWhat: string
+  modeKnowWhatDesc: string
+  modeHelpFigure: string
+  modeHelpFigureDesc: string
+  switchMode: string
+
   // Consent
   consentTitle: string
   consentIntro: string
@@ -146,7 +155,15 @@ export const translations = {
   en: {
     appTitle: 'Youth Resource Navigator',
     appSubtitle: 'Tell us about your situation, and we\'ll help you find the right resources',
-    
+
+    landingWelcome: 'Hey! Welcome 👋',
+    landingSubtitle: 'How would you like to find resources today?',
+    modeKnowWhat: 'I know what I need',
+    modeKnowWhatDesc: 'Answer a few quick questions to find specific resources',
+    modeHelpFigure: 'Help me figure it out',
+    modeHelpFigureDesc: 'Chat with me and I\'ll help you find what you need',
+    switchMode: 'Switch Mode',
+
     consentTitle: 'Your Privacy Matters',
     consentIntro: 'Before we start, here\'s what you need to know about how we use your information:',
     consentWhatWeCollect: 'What We Collect',
@@ -309,7 +326,15 @@ export const translations = {
   es: {
     appTitle: 'Navegador de Recursos para Jóvenes',
     appSubtitle: 'Cuéntanos sobre tu situación y te ayudaremos a encontrar los recursos adecuados',
-    
+
+    landingWelcome: '¡Hola! Bienvenido/a 👋',
+    landingSubtitle: '¿Cómo te gustaría encontrar recursos hoy?',
+    modeKnowWhat: 'Sé lo que necesito',
+    modeKnowWhatDesc: 'Responde algunas preguntas rápidas para encontrar recursos específicos',
+    modeHelpFigure: 'Ayúdame a descubrirlo',
+    modeHelpFigureDesc: 'Chatea conmigo y te ayudaré a encontrar lo que necesitas',
+    switchMode: 'Cambiar Modo',
+
     consentTitle: 'Tu Privacidad Importa',
     consentIntro: 'Antes de comenzar, esto es lo que necesitas saber sobre cómo usamos tu información:',
     consentWhatWeCollect: 'Qué Recopilamos',

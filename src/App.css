@@ -61,6 +61,16 @@
   border-color: white;
 }
 
+.switch-mode-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.switch-mode-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
 .mode-description {
   margin-top: 15px;
   padding: 12px 20px;
@@ -68,6 +78,7 @@
   border-radius: 12px;
   font-size: 0.95rem;
   backdrop-filter: blur(10px);
+  color: white;
 }
 
 .app-header h1 {
