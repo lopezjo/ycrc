@@ -27,6 +27,8 @@ export function checkEligibilityDetailed(resource: Resource, responses: UserResp
   const missingInfo: string[] = []
   const criticalMissingInfo: string[] = [] // Info that MUST be provided
 
+  const { language = 'en' } = responses
+
   // Check age (CRITICAL for matching)
   if (criteria.age) {
     const age = Number(responses.age)
@@ -35,10 +37,18 @@ export function checkEligibilityDetailed(resource: Resource, responses: UserResp
       missingInfo.push('age')
     } else {
       if (criteria.age.min !== undefined && age < criteria.age.min) {
-        reasons.push(`You need to be at least ${criteria.age.min} years old (you're ${age})`)
+        reasons.push(
+          language === 'es'
+            ? `Necesitas tener al menos ${criteria.age.min} años (tienes ${age})`
+            : `You need to be at least ${criteria.age.min} years old (you're ${age})`
+        )
       }
       if (criteria.age.max !== undefined && age > criteria.age.max) {
-        reasons.push(`This program is for people up to ${criteria.age.max} years old (you're ${age})`)
+        reasons.push(
+          language === 'es'
+            ? `Este programa es para personas hasta ${criteria.age.max} años (tienes ${age})`
+            : `This program is for people up to ${criteria.age.max} years old (you're ${age})`
+        )
       }
     }
   }
@@ -52,7 +62,11 @@ export function checkEligibilityDetailed(resource: Resource, responses: UserResp
     } else {
       const locationMatch = checkLocationMatch(userLocation, criteria.location)
       if (!locationMatch.matches) {
-        reasons.push(locationMatch.reason || `This program is only available in: ${criteria.location.join(', ')}`)
+        reasons.push(
+          language === 'es'
+            ? (locationMatch.reason?.replace('This service is ', 'Este servicio está ') || `Este programa solo está disponible en: ${criteria.location.join(', ')}`)
+            : (locationMatch.reason || `This program is only available in: ${criteria.location.join(', ')}`)
+        )
       }
       // Note: We don't add a reason if it matches nearby - they're still eligible
     }
@@ -69,7 +83,11 @@ export function checkEligibilityDetailed(resource: Resource, responses: UserResp
         return doesSituationMatch(userSituation, requiredSituation)
       })
       if (!matches) {
-        reasons.push(`This program is for people who are: ${criteria.situation.join(' or ')}`)
+        reasons.push(
+          language === 'es'
+            ? `Este programa es para personas que están: ${criteria.situation.join(' o ')}`
+            : `This program is for people who are: ${criteria.situation.join(' or ')}`
+        )
       }
     }
   }
@@ -81,9 +99,15 @@ export function checkEligibilityDetailed(resource: Resource, responses: UserResp
     } else {
       const userHasId = responses.hasId === true || responses.hasId === 'yes'
       if (criteria.hasId !== userHasId) {
-        reasons.push(criteria.hasId 
-          ? 'This program requires a valid ID' 
-          : 'This program is for people who do not have an ID')
+        reasons.push(
+          language === 'es'
+            ? (criteria.hasId 
+                ? 'Este programa requiere una identificación válida'
+                : 'Este programa es para personas que no tienen identificación')
+            : (criteria.hasId 
+                ? 'This program requires a valid ID'
+                : 'This program is for people who do not have an ID')
+        )
       }
     }
   }
@@ -95,9 +119,15 @@ export function checkEligibilityDetailed(resource: Resource, responses: UserResp
     } else {
       const userHasIncome = responses.hasIncome === true || responses.hasIncome === 'yes'
       if (criteria.hasIncome !== userHasIncome) {
-        reasons.push(criteria.hasIncome 
-          ? 'This program is for people who have income' 
-          : 'This program is for people who do not have income')
+        reasons.push(
+          language === 'es'
+            ? (criteria.hasIncome 
+                ? 'Este programa es para personas que tienen ingresos'
+                : 'Este programa es para personas que no tienen ingresos')
+            : (criteria.hasIncome 
+                ? 'This program is for people who have income'
+                : 'This program is for people who do not have income')
+        )
       }
     }
   }
@@ -109,9 +139,15 @@ export function checkEligibilityDetailed(resource: Resource, responses: UserResp
     } else {
       const userInSchool = responses.inSchool === true || responses.inSchool === 'yes'
       if (criteria.inSchool !== userInSchool) {
-        reasons.push(criteria.inSchool 
-          ? 'This program is for people currently enrolled in school' 
-          : 'This program is for people not currently in school')
+        reasons.push(
+          language === 'es'
+            ? (criteria.inSchool 
+                ? 'Este programa es para personas actualmente matriculadas en la escuela'
+                : 'Este programa es para personas que no están actualmente en la escuela')
+            : (criteria.inSchool 
+                ? 'This program is for people currently enrolled in school'
+                : 'This program is for people not currently in school')
+        )
       }
     }
   }
@@ -124,10 +160,14 @@ export function checkEligibilityDetailed(resource: Resource, responses: UserResp
     } else {
       const mappedDuration = mapHousingDurationToCriteria(housingDuration)
       if (mappedDuration !== criteria.duration) {
-        const durationText = criteria.duration === 'short-term' ? 
-          'short-term emergency housing' : 
-          'longer-term housing support'
-        reasons.push(`This program provides ${durationText}`)
+        const durationText = criteria.duration === 'short-term' 
+          ? (language === 'es' ? 'vivienda de emergencia a corto plazo' : 'short-term emergency housing')
+          : (language === 'es' ? 'apoyo de vivienda a largo plazo' : 'longer-term housing support')
+        reasons.push(
+          language === 'es'
+            ? `Este programa proporciona ${durationText}`
+            : `This program provides ${durationText}`
+        )
       }
     }
   }

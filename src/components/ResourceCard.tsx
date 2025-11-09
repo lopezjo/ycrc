@@ -16,7 +16,11 @@ export default function ResourceCard({ resource, onLearnMore }: ResourceCardProp
         <div className="urgent-badge">⚠️ {language === 'es' ? 'Urgente - Disponible Ahora' : 'Urgent - Available Now'}</div>
       )}
       <div className="resource-header">
-        <h3 className="resource-name">{resource.name}</h3>
+        <h3 className="resource-name">
+          {typeof resource.name === 'object' && 'en' in resource.name
+            ? resource.name[language] || resource.name.en
+            : resource.name}
+        </h3>
         <div className="resource-meta">
           <span className="resource-category">{resource.category.join(', ')}</span>
           {resource.lgbtqAffirming && (
@@ -29,11 +33,18 @@ export default function ResourceCard({ resource, onLearnMore }: ResourceCardProp
           ))}
         </div>
       </div>
-      <p className="resource-description">{resource.description}</p>
+      <p className="resource-description">
+        {typeof resource.description === 'object' && 'en' in resource.description
+          ? resource.description[language] || resource.description.en
+          : resource.description}
+      </p>
       
       {resource.hours && (
         <div className="resource-info">
-          <strong>{t('hours')}</strong> {resource.hours}
+          <strong>{t('hours')}</strong>{' '}
+          {typeof resource.hours === 'object' && 'en' in resource.hours
+            ? resource.hours[language] || resource.hours.en
+            : resource.hours}
         </div>
       )}
 

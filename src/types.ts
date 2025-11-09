@@ -40,20 +40,25 @@ export interface EligibilityCriteria {
   duration?: string
 }
 
+export interface LocalizedText {
+  en: string
+  es: string
+}
+
 export interface ResourceQuestion {
   id: string
-  text: string
-  context?: string
+  text: string | LocalizedText
+  context?: string | LocalizedText
   field: string
   type: 'text' | 'yesno' | 'multiple'
-  options?: string[]
+  options?: string[] | LocalizedText[]
   barrier?: string // What barrier this question identifies
 }
 
 export interface Resource {
   id: string
-  name: string
-  description: string
+  name: string | LocalizedText
+  description: string | LocalizedText
   category: string[] // Changed to array
   eligibility: EligibilityCriteria
   contact: {
@@ -62,12 +67,12 @@ export interface Resource {
     website?: string
     address?: string
   }
-  hours?: string
+  hours?: string | LocalizedText
   notes?: string
   priority?: 'high' | 'medium' | 'low'
   urgent?: boolean
   followUpQuestions?: ResourceQuestion[]
-  whatItOffers?: string[]
+  whatItOffers?: (string | LocalizedText)[]
   commonBarriers?: string[]
   lgbtqAffirming?: boolean // Explicitly LGBTQ+ friendly
   tags?: string[] // Additional tags for filtering

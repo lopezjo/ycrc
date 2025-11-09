@@ -61,7 +61,10 @@ export default function ResourceDetailModal({ resource, onClose, onAssessmentCom
       }
       return false
     })
-    .map(q => q.barrier || q.text)
+    .map(q => {
+      const barrier = q.barrier || q.text;
+      return typeof barrier === 'object' && 'en' in barrier ? barrier[language] || barrier.en : barrier;
+    })
 
   const canUseResource = identifiedBarriers.length === 0
   
@@ -76,7 +79,7 @@ export default function ResourceDetailModal({ resource, onClose, onAssessmentCom
         <button className="resource-detail-close" onClick={onClose}>×</button>
         
         <div className="resource-detail-header">
-          <h2>{resource.name}</h2>
+          <h2>{typeof resource.name === 'object' ? resource.name[language] || resource.name.en : resource.name}</h2>
           <span className="resource-detail-category">{resource.category}</span>
         </div>
 
@@ -91,40 +94,44 @@ export default function ResourceDetailModal({ resource, onClose, onAssessmentCom
             
             {currentQuestion.context && (
               <div className="question-context">
-                {currentQuestion.context}
+                {typeof currentQuestion.context === 'object'
+                  ? currentQuestion.context[language] || currentQuestion.context.en
+                  : currentQuestion.context}
               </div>
             )}
             
             <div className="question-text">
-              {currentQuestion.text}
+              {typeof currentQuestion.text === 'object'
+                ? currentQuestion.text[language] || currentQuestion.text.en
+                : currentQuestion.text}
             </div>
 
             <div className="question-options">
               {currentQuestion.type === 'yesno' ? (
                 <>
-                  <button 
-                    onClick={() => handleAnswer(true)}
-                    className="option-btn yes-btn"
-                  >
+                  <button onClick={() => handleAnswer(true)} className="option-btn">
                     {language === 'es' ? 'Sí' : 'Yes'}
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleAnswer(false)}
-                    className="option-btn no-btn"
+                    className="option-btn"
                   >
                     {language === 'es' ? 'No' : 'No'}
                   </button>
                 </>
               ) : currentQuestion.type === 'multiple' && currentQuestion.options ? (
-                currentQuestion.options.map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => handleAnswer(option)}
-                    className="option-btn"
-                  >
-                    {option}
-                  </button>
-                ))
+                currentQuestion.options.map((option, index) => {
+                  const optionText = typeof option === 'object' ? option[language] || option.en : option;
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleAnswer(optionText)}
+                      className="option-btn"
+                    >
+                      {optionText}
+                    </button>
+                  )
+                })
               ) : null}
             </div>
           </div>
@@ -135,11 +142,19 @@ export default function ResourceDetailModal({ resource, onClose, onAssessmentCom
               {resource.whatItOffers && resource.whatItOffers.length > 0 ? (
                 <ul>
                   {resource.whatItOffers.map((offer, idx) => (
-                    <li key={idx}>{offer}</li>
+                    <li key={idx}>
+                      {typeof offer === 'object' && 'en' in offer
+                        ? (offer[language] || offer.en)
+                        : offer}
+                    </li>
                   ))}
                 </ul>
               ) : (
-                <p>{resource.description}</p>
+                <p>
+                  {typeof resource.description === 'object' && 'en' in resource.description
+                    ? resource.description[language] || resource.description.en
+                    : resource.description}
+                </p>
               )}
             </div>
 
@@ -235,7 +250,10 @@ export default function ResourceDetailModal({ resource, onClose, onAssessmentCom
               )}
               {resource.hours && (
                 <p>
-                  <strong>{t('hours')}</strong> {resource.hours}
+                  <strong>{t('hours')}</strong>{' '}
+                  {typeof resource.hours === 'object' && 'en' in resource.hours
+                    ? resource.hours[language] || resource.hours.en
+                    : resource.hours}
                 </p>
               )}
             </div>
@@ -251,11 +269,19 @@ export default function ResourceDetailModal({ resource, onClose, onAssessmentCom
               {resource.whatItOffers && resource.whatItOffers.length > 0 ? (
                 <ul>
                   {resource.whatItOffers.map((offer, idx) => (
-                    <li key={idx}>{offer}</li>
+                    <li key={idx}>
+                      {typeof offer === 'object' && 'en' in offer
+                        ? (offer[language] || offer.en)
+                        : offer}
+                    </li>
                   ))}
                 </ul>
               ) : (
-                <p>{resource.description}</p>
+                <p>
+                  {typeof resource.description === 'object' && 'en' in resource.description
+                    ? resource.description[language] || resource.description.en
+                    : resource.description}
+                </p>
               )}
             </div>
 
@@ -316,7 +342,10 @@ export default function ResourceDetailModal({ resource, onClose, onAssessmentCom
               )}
               {resource.hours && (
                 <p>
-                  <strong>{t('hours')}</strong> {resource.hours}
+                  <strong>{t('hours')}</strong>{' '}
+                  {typeof resource.hours === 'object' && 'en' in resource.hours
+                    ? resource.hours[language] || resource.hours.en
+                    : resource.hours}
                 </p>
               )}
             </div>

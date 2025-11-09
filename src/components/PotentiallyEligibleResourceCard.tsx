@@ -14,10 +14,18 @@ export default function PotentiallyEligibleResourceCard({ resource, missingInfo,
   return (
     <div className="potentially-eligible-resource-card">
       <div className="resource-header">
-        <h3 className="resource-name">{resource.name}</h3>
+        <h3 className="resource-name">
+          {typeof resource.name === 'object' && 'en' in resource.name
+            ? resource.name[language] || resource.name.en
+            : resource.name}
+        </h3>
         <span className="resource-category">{resource.category.join(', ')}</span>
       </div>
-      <p className="resource-description">{resource.description}</p>
+      <p className="resource-description">
+        {typeof resource.description === 'object' && 'en' in resource.description
+          ? resource.description[language] || resource.description.en
+          : resource.description}
+      </p>
       
       <div className="missing-info">
         <strong>💡 {t('toCheckEligibility')}</strong>
@@ -42,7 +50,8 @@ export default function PotentiallyEligibleResourceCard({ resource, missingInfo,
 
       {resource.hours && (
         <div className="resource-info">
-          <strong>{t('hours')}</strong> {resource.hours}
+          <strong>{t('hours')}</strong>{' '}
+          {typeof resource.hours === 'object' && 'en' in resource.hours ? resource.hours[language] || resource.hours.en : resource.hours}
         </div>
       )}
 
