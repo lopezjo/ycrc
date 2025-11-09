@@ -7,6 +7,9 @@ interface AIAnalysisResult {
   empathicResponse: string
   suggestedCategories: string[]
   needsImmediateHelp: boolean
+  distressDetected: boolean
+  distressLevel: 'none' | 'mild' | 'moderate' | 'severe' | 'crisis'
+  distressIndicators?: string[]
 }
 
 // Enable logging for debugging
@@ -101,7 +104,10 @@ async function callAnthropicAI(
       empathicResponse: result.empathicResponse || '',
       suggestedCategories: result.suggestedCategories || [],
       needsImmediateHelp: result.needsImmediateHelp || false,
-      nextQuestion: result.nextQuestion
+      nextQuestion: result.nextQuestion,
+      distressDetected: result.distressDetected || false,
+      distressLevel: result.distressLevel || 'none',
+      distressIndicators: result.distressIndicators || []
     }
   } catch (error) {
     logError('Proxy API call failed:', error)
@@ -126,18 +132,36 @@ async function callOpenAI(
 Your role:
 - Be warm, empathetic, and non-judgmental
 - Recognize urgency and crisis situations
+- DETECT DISTRESS SIGNALS including: emotional overwhelm, expressions of hopelessness, mentions of self-harm or suicide, abuse situations, extreme anxiety, trauma responses, or feelings of being unsafe
 - Extract key information: age, location, housing situation, needs
 - Suggest related resources they might not know about
 - Use simple, youth-friendly language
+- When distress is detected, slow down and be extra empathetic
+
+Distress Detection Levels:
+- CRISIS: Suicidal ideation, self-harm, immediate danger, severe trauma
+- SEVERE: Abuse, unsafe situation, extreme emotional distress, hopelessness
+- MODERATE: High anxiety, overwhelmed, depressed, scared, alone
+- MILD: Stressed, worried, uncertain, frustrated
+- NONE: No distress indicators
 
 Extract and return JSON with:
 {
   "extractedData": {object with any fields you can determine},
   "urgencyLevel": "low|medium|high|critical",
-  "empathicResponse": "your warm, brief response",
+  "empathicResponse": "your warm, brief response (extra empathetic if distress detected)",
   "suggestedCategories": ["Housing", "Food", etc],
-  "needsImmediateHelp": boolean
+  "needsImmediateHelp": boolean,
+  "distressDetected": boolean,
+  "distressLevel": "none|mild|moderate|severe|crisis",
+  "distressIndicators": ["specific indicators you detected, e.g., 'suicidal ideation', 'feelings of hopelessness'"]
 }
+
+When distress is detected:
+- Acknowledge their feelings with empathy
+- Remind them they can take their time, skip questions, or take a break
+- For crisis-level distress, prioritize crisis resources and hotlines
+- Use gentle, supportive language
 
 Available fields to extract:
 - age (number)
@@ -189,7 +213,10 @@ Available fields to extract:
       empathicResponse: result.empathicResponse || '',
       suggestedCategories: result.suggestedCategories || [],
       needsImmediateHelp: result.needsImmediateHelp || false,
-      nextQuestion: result.nextQuestion
+      nextQuestion: result.nextQuestion,
+      distressDetected: result.distressDetected || false,
+      distressLevel: result.distressLevel || 'none',
+      distressIndicators: result.distressIndicators || []
     }
   } catch (error) {
     logError('OpenAI API call failed:', error)
@@ -210,6 +237,64 @@ function mockAIAnalysis(
   let empathicResponse = ''
   const suggestedCategories: string[] = []
   let needsImmediateHelp = false
+  let distressDetected = false
+  let distressLevel: 'none' | 'mild' | 'moderate' | 'severe' | 'crisis' = 'none'
+  const distressIndicators: string[] = []
+
+  // DISTRESS DETECTION (done first to prioritize)
+  // Crisis-level distress
+  if (lowerMessage.match(/\b(suicide|suicidal|kill\s*(my)?self|end\s*my\s*life|want\s*to\s*die|wanna\s*die|wish\s*i\s*was\s*dead|self\s*harm|hurt\s*(my)?self|cutting)\b/)) {
+    distressDetected = true
+    distressLevel = 'crisis'
+    urgencyLevel = 'critical'
+    needsImmediateHelp = true
+    distressIndicators.push('suicidal ideation or self-harm')
+    empathicResponse = language === 'es'
+      ? 'Siento mucho que estés pasando por esto. Tu vida importa y hay personas disponibles 24/7 que quieren ayudarte. No tienes que pasar por esto solo/a. ¿Quieres que te muestre los recursos de crisis ahora, o prefieres tomarte un tiempo?'
+      : "I'm really sorry you're going through this. Your life matters and there are people available 24/7 who want to help you. You don't have to go through this alone. Would you like me to show you crisis resources now, or would you prefer to take a moment?"
+  }
+  // Severe distress - abuse, unsafe situations
+  else if (lowerMessage.match(/\b(abuse|abused|abusing|unsafe|don'?t\s*feel\s*safe|not\s*safe|scared\s*of|being\s*hurt|violence|violent|hitting|threat)\b/)) {
+    distressDetected = true
+    distressLevel = 'severe'
+    urgencyLevel = 'critical'
+    needsImmediateHelp = true
+    distressIndicators.push('unsafe situation or abuse')
+    empathicResponse = language === 'es'
+      ? 'Gracias por confiar en mí con esto. Tu seguridad es lo más importante. Recuerda que puedes tomarte tu tiempo, omitir preguntas, o tomar un descanso cuando lo necesites. ¿Estás en un lugar seguro para hablar ahora?'
+      : "Thank you for trusting me with this. Your safety is the most important thing. Remember you can take your time, skip questions, or take a break whenever you need. Are you in a safe place to talk right now?"
+  }
+  // Severe distress - hopelessness, extreme emotional pain, giving up
+  else if (lowerMessage.match(/\b(hopeless|no\s*hope|can'?t\s*go\s*on|can'?t\s*take\s*(it|this)|can'?t\s*do\s*this|give\s*up|giving\s*up|no\s*point|nothing\s*matters|doesn'?t\s*matter|does\s*it\s*(even\s*)?matter|what'?s\s*the\s*point)\b/)) {
+    distressDetected = true
+    distressLevel = 'severe'
+    urgencyLevel = 'high'
+    distressIndicators.push('expressions of hopelessness')
+    empathicResponse = language === 'es'
+      ? 'Escucho que las cosas se sienten realmente difíciles ahora. Esos sentimientos son válidos. No hay prisa - podemos ir a tu ritmo. ¿Hay algo específico que necesitas ahora mismo?'
+      : "I hear that things feel really hard right now. Those feelings are valid. There's no rush - we can go at your pace. Is there something specific you need right now?"
+  }
+  // Moderate distress - overwhelmed, anxious, depressed
+  else if (lowerMessage.match(/\b(overwhelmed|can'?t\s*handle|too\s*much|stressed\s*out|panick?ing|anxious|depressed|alone|lonely|isolated|scared|afraid|terrified)\b/)) {
+    distressDetected = true
+    distressLevel = 'moderate'
+    if (!urgencyLevel || urgencyLevel === 'medium') {
+      urgencyLevel = 'high'
+    }
+    distressIndicators.push('emotional distress or overwhelm')
+    empathicResponse = language === 'es'
+      ? 'Entiendo que te sientes abrumado/a. Está bien sentirse así. Podemos ir despacio, y puedes omitir cualquier pregunta. Solo comparte lo que te sientas cómodo/a compartiendo.'
+      : "I understand you're feeling overwhelmed. It's okay to feel that way. We can go slowly, and you can skip any questions. Just share what you're comfortable sharing."
+  }
+  // Mild distress - worried, uncertain, frustrated
+  else if (lowerMessage.match(/\b(worried|worry|nervous|unsure|uncertain|don'?t\s*know|confused|frustrated|upset|difficult|hard\s*time)\b/)) {
+    distressDetected = true
+    distressLevel = 'mild'
+    distressIndicators.push('worry or uncertainty')
+    empathicResponse = language === 'es'
+      ? 'Gracias por compartir. Es completamente normal sentirse así. Tomémonos el tiempo necesario para encontrar los recursos adecuados para ti.'
+      : "Thanks for sharing. It's completely normal to feel this way. Let's take the time we need to find the right resources for you."
+  }
 
   // Extract age
   const ageMatch = lowerMessage.match(/\b(\d{1,2})\s*(years?\s*old|y\.?o\.?|yr)?\b/)
@@ -330,7 +415,10 @@ function mockAIAnalysis(
     urgencyLevel,
     empathicResponse,
     suggestedCategories,
-    needsImmediateHelp
+    needsImmediateHelp,
+    distressDetected,
+    distressLevel,
+    distressIndicators
   }
 
   log('Mock AI result:', result)
