@@ -1,9 +1,8 @@
-import { translations, Language, Translations } from './translations'
+import { translations, type Language, type Translations } from './translations'
 
-let currentLanguage: Language = 'en'
+export type { Language, Translations }
 
 export function setLanguage(lang: Language): void {
-  currentLanguage = lang
   try {
     localStorage.setItem('youth-navigator-language', lang)
   } catch (error) {
@@ -26,7 +25,14 @@ export function getLanguage(): Language {
 export function t(key: keyof Translations): string {
   const lang = getLanguage()
   const translation = translations[lang][key]
-  return translation || translations.en[key] || key
+  if (typeof translation === 'string') {
+    return translation
+  }
+  const fallback = translations.en[key]
+  if (typeof fallback === 'string') {
+    return fallback
+  }
+  return String(key)
 }
 
 export function formatTranslation(key: keyof Translations, params: { [key: string]: string | number }): string {
@@ -48,8 +54,4 @@ export function formatTranslation(key: keyof Translations, params: { [key: strin
   return text
 }
 
-// Initialize language on load
-if (typeof window !== 'undefined') {
-  currentLanguage = getLanguage()
-}
 

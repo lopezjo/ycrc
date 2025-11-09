@@ -1,10 +1,8 @@
 import { ConsentInfo } from '../types'
 import { getLanguage } from '../i18n/i18n'
-import { translations } from '../i18n/translations'
 
 function getConsentInfo(): ConsentInfo {
   const lang = getLanguage()
-  const t = translations[lang]
 
   return {
     whatWeCollect: lang === 'es' 

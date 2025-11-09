@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { UserResponse, Resource } from '../types'
 import { useLanguage } from '../i18n/LanguageContext'
 import { generateProviderExport, downloadJSON, generateHMISFormat, ProviderDataExport } from '../utils/dataExport'
+import DataPrivacyDashboard from './DataPrivacyDashboard'
 import { getUserId } from '../utils/session'
 import './DataExportModal.css'
 
@@ -18,37 +19,58 @@ export default function DataExportModal({
   resourceAssessments,
   onClose 
 }: DataExportModalProps) {
-  const { t, language } = useLanguage()
+  const { language } = useLanguage()
   const [exportFormat, setExportFormat] = useState<'standard' | 'hmis'>('standard')
   const [includeAssessments, setIncludeAssessments] = useState(true)
   const [includeSelectedResources, setIncludeSelectedResources] = useState(true)
   const [previewData, setPreviewData] = useState<ProviderDataExport | null>(null)
+  const [selectedFields, setSelectedFields] = useState<Set<string>>(new Set(Object.keys(responses)))
+
+  const handleFieldToggle = (field: string, include: boolean) => {
+    const newFields = new Set(selectedFields)
+    if (include) {
+      newFields.add(field)
+    } else {
+      newFields.delete(field)
+    }
+    setSelectedFields(newFields)
+  }
 
   const generatePreview = () => {
+    // Filter responses to only selected fields
+    const filteredResponses = Object.fromEntries(
+      Object.entries(responses).filter(([key]) => selectedFields.has(key))
+    )
+
     if (exportFormat === 'standard') {
       const data = generateProviderExport(
-        responses,
+        filteredResponses,
         includeSelectedResources ? selectedResources : undefined,
         includeAssessments ? resourceAssessments : undefined
       )
       setPreviewData(data)
     } else {
       // For HMIS, we'll show a simplified preview
-      const hmisData = generateHMISFormat(responses)
+      const hmisData = generateHMISFormat(filteredResponses)
       setPreviewData(hmisData as any)
     }
   }
 
   const handleExport = () => {
+    // Filter responses to only selected fields
+    const filteredResponses = Object.fromEntries(
+      Object.entries(responses).filter(([key]) => selectedFields.has(key))
+    )
+
     if (exportFormat === 'standard') {
       const data = generateProviderExport(
-        responses,
+        filteredResponses,
         includeSelectedResources ? selectedResources : undefined,
         includeAssessments ? resourceAssessments : undefined
       )
       downloadJSON(data, 'youth-resource-data.json')
     } else {
-      const hmisData = generateHMISFormat(responses)
+      const hmisData = generateHMISFormat(filteredResponses)
       downloadJSON(hmisData as any, 'hmis-export.json')
     }
     onClose()
@@ -141,6 +163,13 @@ export default function DataExportModal({
             </span>
           </label>
         </div>
+
+        {/* Data Privacy Dashboard */}
+        <DataPrivacyDashboard
+          responses={responses}
+          onFieldToggle={handleFieldToggle}
+          selectedFields={selectedFields}
+        />
 
         <div className="export-actions">
           <button onClick={generatePreview} className="preview-btn">

@@ -17,7 +17,17 @@ export default function ResourceCard({ resource, onLearnMore }: ResourceCardProp
       )}
       <div className="resource-header">
         <h3 className="resource-name">{resource.name}</h3>
-        <span className="resource-category">{resource.category.join(', ')}</span>
+        <div className="resource-meta">
+          <span className="resource-category">{resource.category.join(', ')}</span>
+          {resource.lgbtqAffirming && (
+            <span className="lgbtq-badge" title={language === 'es' ? 'Espacio seguro y afirmativo para LGBTQ+' : 'LGBTQ+ safe and affirming'}>
+              🏳️‍🌈 {language === 'es' ? 'LGBTQ+ Seguro' : 'LGBTQ+ Safe'}
+            </span>
+          )}
+          {resource.tags && resource.tags.map(tag => (
+            <span key={tag} className="resource-tag">{tag}</span>
+          ))}
+        </div>
       </div>
       <p className="resource-description">{resource.description}</p>
       

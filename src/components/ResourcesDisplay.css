@@ -53,8 +53,49 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.eligible-title {
+.urgent-section {
+  border: 3px solid #ff5722;
+  border-radius: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  box-shadow: 0 4px 20px rgba(255, 87, 34, 0.3);
+  animation: urgentPulse 2s infinite;
+}
+
+@keyframes urgentPulse {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(255, 87, 34, 0.3);
+  }
+  50% {
+    box-shadow: 0 6px 30px rgba(255, 87, 34, 0.5);
+  }
+}
+
+.urgent-title {
+  background: linear-gradient(135deg, #ff5722 0%, #ff7043 100%);
+  color: white;
+  font-size: 1.5rem;
+}
+
+.urgent-description {
+  color: #d84315;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.high-priority-section {
+  background: #f0f9f4;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.high-priority-title {
   background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  color: white;
+}
+
+.eligible-title {
+  background: linear-gradient(135deg, #2196f3 0%, #42a5f5 100%);
   color: white;
 }
 

@@ -37,7 +37,7 @@ function detectDistress(text: string): boolean {
 }
 
 export default function ChatInterface() {
-  const { t, format } = useLanguage()
+  const { t, format, language } = useLanguage()
   const [messages, setMessages] = useState<Message[]>([])
   const [currentQuestionId, setCurrentQuestionId] = useState<string>('initial')
   const [responses, setResponses] = useState<UserResponse>({})
@@ -530,8 +530,9 @@ export default function ChatInterface() {
         {distressDetected && (
           <div className="distress-banner">
             <b>
-              {t('distressAlert') ||
-                'It sounds like you might need extra support or urgent help right now. Here are some resources available 24/7:'}
+              {language === 'es'
+                ? 'Parece que podrías necesitar apoyo adicional o ayuda urgente en este momento. Aquí hay recursos disponibles 24/7:'
+                : 'It sounds like you might need extra support or urgent help right now. Here are some resources available 24/7:'}
             </b>
             <button onClick={() => setShowSupport(true)} className="support-banner-btn">
               {t('needSupport') || 'Need Support?'}

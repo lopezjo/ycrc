@@ -1,5 +1,6 @@
 import { Resource, UserResponse, EligibilityResult } from '../types'
 import { doesSituationMatch } from './situationMapping'
+import { checkLocationMatch } from './locationMatching'
 
 export function checkEligibility(resource: Resource, responses: UserResponse): boolean {
   const result = checkEligibilityDetailed(resource, responses)
@@ -24,11 +25,13 @@ export function checkEligibilityDetailed(resource: Resource, responses: UserResp
   const criteria = resource.eligibility
   const reasons: string[] = []
   const missingInfo: string[] = []
+  const criticalMissingInfo: string[] = [] // Info that MUST be provided
 
-  // Check age
+  // Check age (CRITICAL for matching)
   if (criteria.age) {
     const age = Number(responses.age)
     if (isNaN(age) || !responses.age) {
+      criticalMissingInfo.push('age')
       missingInfo.push('age')
     } else {
       if (criteria.age.min !== undefined && age < criteria.age.min) {
@@ -40,25 +43,26 @@ export function checkEligibilityDetailed(resource: Resource, responses: UserResp
     }
   }
 
-  // Check location
+  // Check location (CRITICAL for matching) with proximity support
   if (criteria.location && criteria.location.length > 0) {
-    const userLocation = String(responses.location || '').toLowerCase()
+    const userLocation = String(responses.location || '')
     if (!userLocation) {
+      criticalMissingInfo.push('location')
       missingInfo.push('location')
     } else {
-      const matches = criteria.location.some(loc => 
-        userLocation.includes(loc.toLowerCase())
-      )
-      if (!matches) {
-        reasons.push(`This program is only available in: ${criteria.location.join(', ')}`)
+      const locationMatch = checkLocationMatch(userLocation, criteria.location)
+      if (!locationMatch.matches) {
+        reasons.push(locationMatch.reason || `This program is only available in: ${criteria.location.join(', ')}`)
       }
+      // Note: We don't add a reason if it matches nearby - they're still eligible
     }
   }
 
-  // Check situation - enhanced matching using situation mapping
+  // Check situation - enhanced matching using situation mapping (CRITICAL)
   if (criteria.situation && criteria.situation.length > 0) {
     const userSituation = String(responses.situation || '').toLowerCase()
     if (!userSituation) {
+      criticalMissingInfo.push('situation')
       missingInfo.push('situation')
     } else {
       const matches = criteria.situation.some(requiredSituation => {
@@ -133,12 +137,15 @@ export function checkEligibilityDetailed(resource: Resource, responses: UserResp
     return { eligible: false, reasons, missingInfo: missingInfo.length > 0 ? missingInfo : undefined }
   }
 
-  // If we have missing info but no reasons, they might be eligible
-  if (missingInfo.length > 0) {
-    return { eligible: false, missingInfo }
+  // If we're missing CRITICAL info (age, location, situation), mark as potentially eligible
+  // But if we only have non-critical missing info (duration, school status, etc.),
+  // assume they're eligible - we can ask those details later if they're interested
+  if (criticalMissingInfo.length > 0) {
+    return { eligible: false, missingInfo: criticalMissingInfo }
   }
 
-  // All checks passed
+  // All critical checks passed - they're eligible!
+  // (Even if we're missing optional info like duration, hasId, etc.)
   return { eligible: true }
 }
 
@@ -196,7 +203,7 @@ export function classifyAllResources(resources: Resource[], responses: UserRespo
 
   resources.forEach(resource => {
     const result = checkEligibilityDetailed(resource, responses)
-    
+
     if (result.eligible) {
       eligible.push(resource)
     } else if (result.reasons && result.reasons.length > 0) {
@@ -211,14 +218,35 @@ export function classifyAllResources(resources: Resource[], responses: UserRespo
     }
   })
 
-  // Sort eligible resources
+  // Sort eligible resources by proximity first, then urgency/priority
+  const userLocation = String(responses.location || '')
   eligible.sort((a, b) => {
+    // Calculate distance for each resource
+    let aDistance = Infinity
+    let bDistance = Infinity
+
+    if (userLocation && a.eligibility.location) {
+      const aMatch = checkLocationMatch(userLocation, a.eligibility.location)
+      aDistance = aMatch.distance
+    }
+    if (userLocation && b.eligibility.location) {
+      const bMatch = checkLocationMatch(userLocation, b.eligibility.location)
+      bDistance = bMatch.distance
+    }
+
+    // First sort by urgency (critical resources always first)
     if (a.urgent && !b.urgent) return -1
     if (!a.urgent && b.urgent) return 1
+
+    // Then by proximity (closer resources first)
+    if (aDistance !== bDistance) return aDistance - bDistance
+
+    // Then by priority
     const priorityOrder = { high: 0, medium: 1, low: 2 }
     const aPriority = priorityOrder[a.priority || 'low']
     const bPriority = priorityOrder[b.priority || 'low']
     if (aPriority !== bPriority) return aPriority - bPriority
+
     return 0
   })
 
