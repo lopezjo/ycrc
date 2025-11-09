@@ -1,0 +1,60 @@
+{
+  "exportDate": "2024-01-15T10:30:00.000Z",
+  "exportVersion": "1.0",
+  "demographics": {
+    "age": 18,
+    "location": "Sacramento",
+    "situation": "sleeping in my car for the past few weeks",
+    "durationOfSituation": "A few weeks (1-4 weeks)"
+  },
+  "eligibility": {
+    "hasId": false,
+    "hasIncome": false,
+    "inSchool": false
+  },
+  "selectedResources": [
+    {
+      "resourceId": "shelter-1",
+      "resourceName": "Youth Emergency Shelter",
+      "category": "Housing",
+      "contact": {
+        "phone": "(555) 123-4567",
+        "address": "123 Main Street, City, State"
+      }
+    },
+    {
+      "resourceId": "transport-1",
+      "resourceName": "Transportation Assistance Program",
+      "category": "Transportation",
+      "contact": {
+        "phone": "(555) 901-2345",
+        "email": "transport@youthservices.org"
+      }
+    }
+  ],
+  "resourceAssessments": {
+    "shelter-1": {
+      "resourceName": "Youth Emergency Shelter",
+      "responses": {
+        "transportToShelter": true,
+        "canMeetCurfew": true,
+        "hasDocumentation": false
+      },
+      "assessedDate": "2024-01-15T10:35:00.000Z"
+    },
+    "transport-1": {
+      "resourceName": "Transportation Assistance Program",
+      "responses": {
+        "transportNeedType": "Bus passes for public transportation",
+        "transportUrgency": "Right now - emergency"
+      },
+      "assessedDate": "2024-01-15T10:40:00.000Z"
+    }
+  },
+  "consent": {
+    "dataShared": true,
+    "shareWithProviders": true,
+    "exportDate": "2024-01-15T10:45:00.000Z"
+  }
+}
+

@@ -1,0 +1,16 @@
+{
+  "PersonalInformation": {
+    "Age": 18
+  },
+  "ResidencePrior": {
+    "LengthOfStay": "A few weeks (1-4 weeks)",
+    "LivingSituation": "sleeping in my car for the past few weeks"
+  },
+  "ProjectEntry": {
+    "EntryDate": "2024-01-15"
+  },
+  "IncomeAndSources": {
+    "IncomeFromAnySource": false
+  }
+}
+

@@ -1,0 +1,651 @@
+import { useState, useRef, useEffect } from 'react'
+import { Message, UserResponse, Resource } from '../types'
+import { questionFlow } from '../data/questions'
+import { resources } from '../data/resources'
+import { consentInfo } from '../data/consent'
+import { classifyAllResources } from '../utils/eligibility'
+import { saveSession, loadSession, clearSession, saveConsent, hasConsent } from '../utils/session'
+import { useLanguage } from '../i18n/LanguageContext'
+import MessageBubble from './MessageBubble'
+import ResourcesDisplay from './ResourcesDisplay'
+import ConsentModal from './ConsentModal'
+import ProgressIndicator from './ProgressIndicator'
+import SupportResources from './SupportResources'
+import DataExportModal from './DataExportModal'
+import './ChatInterface.css'
+
+// Distress detection patterns
+const DISTRESS_PATTERNS = [
+  'suicidal', 'kill myself', 'kill me', 'hurt myself', 'self harm', 'abuse', 'abused',
+  'want to die', 'wanna die', 'wish i was dead', 'end my life', 'ending my life',
+  'unsafe', "don't feel safe", 'no where to go', 'scared', 'alone', 'depressed', 'panic', 'overwhelmed',
+  'crisis', 'need help now', 'hopeless', "can't go on", 'runaway',
+  // Spanish
+  'suicida', 'quiero morir', 'no quiero vivir', 'me siento solo', 'me siento mal', 'necesito ayuda', 'crisis', 'abuso', 'abusado', 'miedo', 'asustado', 'no estoy seguro', 'pánico'
+];
+function detectDistress(text: string): boolean {
+  const lower = (text || '').toLowerCase();
+  return DISTRESS_PATTERNS.some(pattern => lower.includes(pattern));
+}
+
+export default function ChatInterface() {
+  const { t, format } = useLanguage()
+  const [messages, setMessages] = useState<Message[]>([])
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const [responses, setResponses] = useState<UserResponse>({})
+  const [inputValue, setInputValue] = useState('')
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [showResources, setShowResources] = useState(false)
+  const [showConsent, setShowConsent] = useState(false)
+  const [showSupport, setShowSupport] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+  const [editMode, setEditMode] = useState(false)
+  const [distressDetected, setDistressDetected] = useState(false);
+  const [showExport, setShowExport] = useState(false)
+  const [selectedResources, setSelectedResources] = useState<Resource[]>([])
+  const [resourceAssessments, setResourceAssessments] = useState<{ [resourceId: string]: { [questionId: string]: any } }>({})
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Load session on mount
+  useEffect(() => {
+    const session = loadSession()
+    if (session && session.consentGiven) {
+      setMessages(session.messages)
+      setResponses(session.responses)
+      setCurrentQuestionIndex(session.currentQuestionIndex)
+      if (session.currentQuestionIndex >= questionFlow.length) {
+        setShowResources(true)
+      } else {
+        // Continue from where they left off
+        // Only ask the question if they haven't answered it yet
+        const currentQuestion = questionFlow[session.currentQuestionIndex]
+        if (currentQuestion && !session.responses[currentQuestion.field]) {
+          askQuestion(session.currentQuestionIndex, false)
+        }
+      }
+    } else {
+      setShowConsent(true)
+      initializeChat()
+    }
+  }, [])
+
+  // Save session whenever responses or progress changes
+  useEffect(() => {
+    if (hasConsent() && messages.length > 0) {
+      saveSession(responses, currentQuestionIndex, messages)
+    }
+  }, [responses, currentQuestionIndex, messages])
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const scrollToEligibleResources = () => {
+    // First try to scroll to the resources top (which includes export button)
+    const resourcesTop = document.getElementById('resources-top')
+    if (resourcesTop) {
+      resourcesTop.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
+    
+    // Fallback to eligible resources section
+    const eligibleSection = document.getElementById('eligible-resources-section')
+    if (eligibleSection) {
+      eligibleSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
+  useEffect(() => {
+    // Don't auto-scroll to bottom when showing resources
+    if (!showResources) {
+      scrollToBottom()
+    }
+  }, [messages, showResources])
+
+  useEffect(() => {
+    // Scroll to eligible resources when they are shown
+    if (showResources) {
+      // Use setTimeout to ensure DOM is updated
+      setTimeout(() => {
+        scrollToEligibleResources()
+      }, 100)
+    }
+  }, [showResources])
+
+  useEffect(() => {
+    if (!isPaused && !showConsent && !showSupport) {
+      inputRef.current?.focus()
+    }
+  }, [messages, isPaused, showConsent, showSupport])
+
+  const initializeChat = () => {
+    const welcomeMessage: Message = {
+      id: 'welcome',
+      text: t('welcomeMessage'),
+      sender: 'assistant',
+      timestamp: new Date(),
+      type: 'question',
+      questionId: questionFlow[0].id
+    }
+    setMessages([welcomeMessage])
+  }
+
+  const handleConsentAccept = () => {
+    saveConsent(true)
+    setShowConsent(false)
+    if (messages.length === 0) {
+      initializeChat()
+    }
+  }
+
+  const handleConsentDecline = () => {
+    // They can still use the app, but we won't save their data
+    setShowConsent(false)
+    if (messages.length === 0) {
+      initializeChat()
+    }
+  }
+
+  const askQuestion = (index: number, showContext = true) => {
+    if (index >= questionFlow.length) {
+      showEligibleResources()
+      return
+    }
+
+    const question = questionFlow[index]
+    
+    // Check if this question is already in the messages to prevent duplicates
+    setMessages((prev: Message[]) => {
+      const questionExists = prev.some(
+        (m: Message) => m.questionId === question.id && m.type === 'question'
+      )
+      
+      if (questionExists) {
+        // Question already asked, don't add it again
+        return prev
+      }
+      
+      const messagesToAdd: Message[] = []
+      
+      if (showContext && question.context) {
+        messagesToAdd.push({
+          id: `context-${Date.now()}`,
+          text: question.context,
+          sender: 'assistant',
+          timestamp: new Date(),
+          type: 'context'
+        })
+      }
+
+      messagesToAdd.push({
+        id: `question-${Date.now()}`,
+        text: question.text,
+        sender: 'assistant',
+        timestamp: new Date(),
+        type: 'question',
+        questionId: question.id
+      })
+
+      return [...prev, ...messagesToAdd]
+    })
+  }
+
+  const handleOptionSelect = (option: string) => {
+    if (isProcessing || isPaused) return
+    if (!distressDetected && detectDistress(option)) {
+      setDistressDetected(true);
+      setShowSupport(true); // optional: open the support modal immediately
+    }
+
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      text: option,
+      sender: 'user',
+      timestamp: new Date()
+    }
+
+    setMessages((prev: Message[]) => [...prev, userMessage])
+    setIsProcessing(true)
+
+    const currentQuestion = questionFlow[currentQuestionIndex]
+    if (currentQuestion) {
+      setResponses((prev: UserResponse) => ({
+        ...prev,
+        [currentQuestion.field]: option
+      }))
+    }
+
+    if (editMode) {
+      // In edit mode, just update the response and show results
+      setEditMode(false)
+      setIsProcessing(false)
+      setShowResources(true)
+    } else {
+      processNextStep()
+    }
+  }
+
+  const handleSend = () => {
+    if (!inputValue.trim() || isProcessing || isPaused) return
+    if (!distressDetected && detectDistress(inputValue)) {
+      setDistressDetected(true);
+      setShowSupport(true); // optional: open the support modal immediately
+    }
+
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      text: inputValue,
+      sender: 'user',
+      timestamp: new Date()
+    }
+
+    setMessages((prev: Message[]) => [...prev, userMessage])
+    const responseText = inputValue.trim()
+    setInputValue('')
+    setIsProcessing(true)
+
+    const currentQuestion = questionFlow[currentQuestionIndex]
+    if (currentQuestion) {
+      let responseValue: string | number | boolean = responseText
+      if (currentQuestion.type === 'number') {
+        responseValue = parseInt(responseText) || 0
+      } else if (currentQuestion.type === 'yesno') {
+        responseValue = /^(yes|y|true|1)$/i.test(responseText)
+      }
+      const updated = { ...responses, [currentQuestion.field]: responseValue }
+      setResponses(updated)
+      
+      if (editMode) {
+        // In edit mode, just update the response and show results
+        setEditMode(false)
+        setIsProcessing(false)
+        setShowResources(true)
+      } else {
+        processNextStep()
+      }
+      return // Early exit, as above does the work
+    }
+    // Fallback if no currentQuestion found
+    if (!editMode) {
+      processNextStep()
+    }
+  }
+
+  const handleSkip = () => {
+    if (isProcessing || isPaused) return
+
+    const currentQuestion = questionFlow[currentQuestionIndex]
+    if (!currentQuestion?.skippable) return
+
+    const skipMessage: Message = {
+      id: `user-skip-${Date.now()}`,
+      text: '[Skipped]',
+      sender: 'user',
+      timestamp: new Date()
+    }
+
+    setMessages((prev: Message[]) => [...prev, skipMessage])
+    setIsProcessing(true)
+
+    if (editMode) {
+      // In edit mode, just show results
+      setEditMode(false)
+      setIsProcessing(false)
+      setShowResources(true)
+    } else {
+      processNextStep()
+    }
+  }
+
+  const processNextStep = () => {
+    if (currentQuestionIndex < questionFlow.length - 1) {
+      const nextIndex = currentQuestionIndex + 1
+      setCurrentQuestionIndex(nextIndex)
+      setIsProcessing(false)
+      askQuestion(nextIndex)
+    } else {
+      showEligibleResources()
+    }
+  }
+
+  const showEligibleResources = () => {
+    const classification = classifyAllResources(resources, responses)
+    const urgentResources = classification.eligible.filter(r => r.urgent)
+    const highPriority = classification.eligible.filter(r => r.priority === 'high' && !r.urgent)
+    
+    let responseText = ''
+    if (classification.eligible.length > 0) {
+      responseText = format('resourcesFound', { count: classification.eligible.length })
+      
+      if (urgentResources.length > 0) {
+        responseText += `\n\n⚠️ **${format('urgentResources', { count: urgentResources.length })}**`
+      }
+      
+      if (highPriority.length > 0) {
+        responseText += `\n\n💚 **${format('highPriorityResources', { count: highPriority.length })}**`
+      }
+      
+      responseText += `\n\n${t('rememberMultiple')}`
+    } else {
+      responseText = t('resourcesFound').replace('{count}', '0').replace('{plural}', 's')
+    }
+    
+    if (classification.potentiallyEligible.length > 0) {
+      responseText += `\n\n💡 **${format('resourcesMightBeAvailable', { count: classification.potentiallyEligible.length })}**`
+    }
+    
+    if (classification.ineligible.length > 0) {
+      responseText += `\n\n📋 ${format('resourcesNotAvailable', { count: classification.ineligible.length })}`
+    }
+    
+    const responseMessage: Message = {
+      id: `response-${Date.now()}`,
+      text: responseText,
+      sender: 'assistant',
+      timestamp: new Date(),
+      type: 'resources'
+    }
+
+    setMessages((prev: Message[]) => [...prev, responseMessage])
+    setShowResources(true)
+    setIsProcessing(false)
+  }
+
+  const handleKeyPress = (e: { key: string; shiftKey: boolean; preventDefault: () => void }) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
+  }
+
+  const handlePause = () => {
+    setIsPaused(true)
+    const pauseMessage: Message = {
+      id: `pause-${Date.now()}`,
+      text: t('pausedNotice'),
+      sender: 'assistant',
+      timestamp: new Date(),
+      type: 'support'
+    }
+    setMessages((prev: Message[]) => [...prev, pauseMessage])
+  }
+
+  const handleResume = () => {
+    setIsPaused(false)
+    const resumeMessage: Message = {
+      id: `resume-${Date.now()}`,
+      text: t('welcomeBack'),
+      sender: 'assistant',
+      timestamp: new Date()
+    }
+    setMessages((prev: Message[]) => [...prev, resumeMessage])
+  }
+
+  const handleEditQuestion = (index: number) => {
+    setEditMode(true)
+    setCurrentQuestionIndex(index)
+    
+    // Remove messages after this question
+    const question = questionFlow[index]
+    
+    // Find where this question was asked
+    const questionMessageIndex = messages.findIndex(
+      (m: Message) => m.questionId === question.id && m.type === 'question'
+    )
+    
+    if (questionMessageIndex !== -1) {
+      // Check if there's a context message right before the question
+      const hasContext = questionMessageIndex > 0 && 
+                        messages[questionMessageIndex - 1].type === 'context'
+      
+      // Remove all messages from the question onwards (including context if present)
+      const sliceIndex = hasContext ? questionMessageIndex - 1 : questionMessageIndex
+      setMessages((prev: Message[]) => prev.slice(0, sliceIndex))
+      
+      // Remove response ONLY for this specific question being edited
+      setResponses((prev: UserResponse) => {
+        const updated = { ...prev }
+        delete updated[question.field]
+        return updated
+      })
+      
+      setShowResources(false)
+      askQuestion(index, true)
+    }
+  }
+
+  const handleClearData = () => {
+    if (confirm(t('clearDataConfirm'))) {
+      clearSession()
+      setMessages([])
+      setResponses({})
+      setCurrentQuestionIndex(0)
+      setShowResources(false)
+      setEditMode(false)
+      initializeChat()
+    }
+  }
+
+  const currentQuestion = questionFlow[currentQuestionIndex]
+
+  return (
+    <div className="chat-interface">
+      {showConsent && (
+        <ConsentModal
+          consentInfo={consentInfo}
+          onAccept={handleConsentAccept}
+          onDecline={handleConsentDecline}
+        />
+      )}
+
+      {showSupport && (
+        <SupportResources onClose={() => setShowSupport(false)} />
+      )}
+
+      {showExport && (
+        <DataExportModal
+          responses={responses}
+          selectedResources={selectedResources}
+          resourceAssessments={resourceAssessments}
+          onClose={() => setShowExport(false)}
+        />
+      )}
+
+      <div className="chat-header">
+        <div className="header-actions">
+          <button 
+            onClick={() => setShowSupport(true)} 
+            className="header-button support-button"
+            title={t('needSupport')}
+          >
+            {t('needSupport')}
+          </button>
+          {!isPaused ? (
+            <button 
+              onClick={handlePause} 
+              className="header-button pause-button"
+              title={t('pause')}
+            >
+              {t('pause')}
+            </button>
+          ) : (
+            <button 
+              onClick={handleResume} 
+              className="header-button resume-button"
+              title={t('resume')}
+            >
+              {t('resume')}
+            </button>
+          )}
+          <button 
+            onClick={() => setEditMode(!editMode)} 
+            className={`header-button ${editMode ? 'active' : ''}`}
+            title={t('edit')}
+          >
+            {editMode ? t('exitEdit') : t('edit')}
+          </button>
+          <button 
+            onClick={handleClearData} 
+            className="header-button clear-button"
+            title={t('clear')}
+          >
+            {t('clear')}
+          </button>
+        </div>
+      </div>
+
+      <ProgressIndicator
+        questions={questionFlow}
+        currentIndex={currentQuestionIndex}
+        responses={responses}
+        onQuestionClick={editMode ? handleEditQuestion : undefined}
+        editable={editMode}
+      />
+
+      <div className="messages-container">
+        {messages.map((message) => (
+          <MessageBubble key={message.id} message={message} />
+        ))}
+        {showResources && (
+          <ResourcesDisplay 
+            responses={responses}
+            selectedResources={selectedResources}
+            setSelectedResources={setSelectedResources}
+            resourceAssessments={resourceAssessments}
+            setResourceAssessments={setResourceAssessments}
+          />
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="input-container">
+        {distressDetected && (
+          <div className="distress-banner">
+            <b>
+              {t('distressAlert') ||
+                'It sounds like you might need extra support or urgent help right now. Here are some resources available 24/7:'}
+            </b>
+            <button onClick={() => setShowSupport(true)} className="support-banner-btn">
+              {t('needSupport') || 'Need Support?'}
+            </button>
+            <button onClick={() => setDistressDetected(false)} className="dismiss-banner-btn" title="Dismiss">
+              ×
+            </button>
+          </div>
+        )}
+        {isPaused && (
+          <div className="paused-notice">
+            {t('pausedNotice')}
+          </div>
+        )}
+
+        {currentQuestion && !showResources && !isPaused && (
+          <>
+            {currentQuestion.type === 'multiple' && currentQuestion.options && (
+              <div className="options-container">
+                {currentQuestion.options.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => handleOptionSelect(option)}
+                    disabled={isProcessing}
+                    className="option-button"
+                  >
+                    {option}
+                  </button>
+                ))}
+                {currentQuestion.skippable && (
+                  <button
+                    onClick={handleSkip}
+                    className="option-button skip-button"
+                  >
+                    {t('skipQuestion')}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {currentQuestion.type !== 'multiple' && (
+              <>
+                <div className="input-hint">
+                  {currentQuestion.type === 'yesno' && t('yesNo')}
+                  {currentQuestion.type === 'number' && t('enterNumber')}
+                  {currentQuestion.skippable && currentQuestion.type === 'text' && t('canSkip')}
+                </div>
+                <div className="input-wrapper">
+                  <input
+                    ref={inputRef}
+                    type={currentQuestion.type === 'number' ? 'number' : 'text'}
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder={isProcessing ? t('processing') : t('typeResponse')}
+                    disabled={isProcessing}
+                    className="chat-input"
+                  />
+                  <button
+                    onClick={handleSend}
+                    onMouseDown={(e) => e.preventDefault()}
+                    disabled={!inputValue.trim() || isProcessing}
+                    className="send-button"
+                  >
+                    {t('send')}
+                  </button>
+                  {currentQuestion.skippable && (
+                    <button
+                      onClick={handleSkip}
+                      onMouseDown={(e) => e.preventDefault()}
+                      className="skip-button-text"
+                      disabled={isProcessing}
+                    >
+                      {t('skip')}
+                    </button>
+                  )}
+                </div>
+                {Array.isArray(currentQuestion.suggestedResponses) && currentQuestion.suggestedResponses.length > 0 && (
+                  <div className="quick-responses-row">
+                    {currentQuestion.suggestedResponses.map((response) => (
+                      <button
+                        key={response}
+                        type="button"
+                        className="quick-response-button"
+                        disabled={isProcessing}
+                        onClick={() => handleOptionSelect(response)}
+                      >
+                        {response}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        )}
+
+        {showResources && (
+          <div className="resources-complete">
+            <p>{t('resourcesComplete')}</p>
+            <div className="resources-actions">
+              <button 
+                onClick={() => {
+                  setShowResources(false)
+                  setCurrentQuestionIndex(0)
+                  setEditMode(true)
+                }}
+                className="edit-answers-button"
+              >
+                {t('editAnswers')}
+              </button>
+              <button 
+                onClick={() => setShowExport(true)}
+                className="export-data-button"
+              >
+                📤 {t('exportData') || 'Export Data'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

@@ -1,0 +1,359 @@
+.resource-detail-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.resource-detail-modal {
+  background: white;
+  border-radius: 20px;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 30px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  position: relative;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.resource-detail-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #999;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.resource-detail-close:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.resource-detail-header {
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.resource-detail-header h2 {
+  color: #333;
+  margin: 0 0 10px 0;
+  font-size: 1.8rem;
+}
+
+.resource-detail-category {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.resource-detail-questions {
+  padding: 20px 0;
+}
+
+.question-progress {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.question-context {
+  background: #f0f4ff;
+  border-left: 4px solid #667eea;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  color: #555;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.question-text {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 25px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.question-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.option-btn {
+  padding: 15px 25px;
+  background: white;
+  border: 2px solid #667eea;
+  border-radius: 12px;
+  font-size: 1rem;
+  color: #667eea;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  font-weight: 500;
+  width: 100%;
+}
+
+.option-btn:hover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  transform: translateX(5px);
+}
+
+.yes-btn {
+  border-color: #4caf50;
+  color: #4caf50;
+}
+
+.yes-btn:hover {
+  background: #4caf50;
+  color: white;
+}
+
+.no-btn {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.no-btn:hover {
+  background: #ff6b6b;
+  color: white;
+}
+
+.resource-detail-info,
+.resource-detail-results {
+  padding: 10px 0;
+}
+
+.what-it-offers {
+  margin-bottom: 25px;
+}
+
+.what-it-offers h3 {
+  color: #4caf50;
+  margin-bottom: 15px;
+  font-size: 1.3rem;
+}
+
+.what-it-offers ul {
+  list-style: none;
+  padding: 0;
+}
+
+.what-it-offers li {
+  padding: 10px 15px;
+  margin-bottom: 8px;
+  background: #e8f5e9;
+  border-left: 4px solid #4caf50;
+  border-radius: 6px;
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+.common-barriers {
+  margin-bottom: 25px;
+}
+
+.common-barriers h3 {
+  color: #ff9800;
+  margin-bottom: 15px;
+  font-size: 1.3rem;
+}
+
+.common-barriers ul {
+  list-style: none;
+  padding: 0;
+}
+
+.common-barriers li {
+  padding: 10px 15px;
+  margin-bottom: 8px;
+  background: #fff3e0;
+  border-left: 4px solid #ff9800;
+  border-radius: 6px;
+  color: #e65100;
+}
+
+.identified-barriers {
+  margin-bottom: 25px;
+  padding: 20px;
+  background: #fff3e0;
+  border-radius: 12px;
+  border: 2px solid #ff9800;
+}
+
+.identified-barriers h3 {
+  color: #e65100;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+.identified-barriers ul {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 15px;
+}
+
+.identified-barriers li {
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  background: white;
+  border-radius: 6px;
+  color: #e65100;
+}
+
+.barrier-help {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+.barrier-help p {
+  margin: 0;
+  color: #666;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.resource-ready {
+  margin-bottom: 25px;
+  padding: 20px;
+  background: #e8f5e9;
+  border-radius: 12px;
+  border: 2px solid #4caf50;
+}
+
+.resource-ready p {
+  margin: 0;
+  color: #2e7d32;
+  font-weight: 500;
+  font-size: 1.05rem;
+}
+
+.resource-contact-info {
+  margin-top: 25px;
+  padding-top: 25px;
+  border-top: 2px solid #e0e0e0;
+}
+
+.resource-contact-info h3 {
+  color: #333;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+.resource-contact-info p {
+  margin: 10px 0;
+  color: #555;
+  font-size: 1rem;
+}
+
+.resource-contact-info a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.resource-contact-info a:hover {
+  text-decoration: underline;
+}
+
+.start-questions-btn,
+.close-results-btn {
+  width: 100%;
+  padding: 15px 25px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin: 25px 0;
+}
+
+.start-questions-btn:hover,
+.close-results-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.close-results-btn {
+  background: #666;
+}
+
+.close-results-btn:hover {
+  background: #555;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.helpful-resources {
+  margin-top: 25px;
+  padding: 20px;
+  background: #f0f9ff;
+  border-radius: 12px;
+  border: 2px solid #bae6fd;
+}
+
+.helpful-resources h3 {
+  margin: 0 0 10px 0;
+  color: #0369a1;
+  font-size: 1.2rem;
+}
+
+.helpful-resources-intro {
+  margin: 0 0 15px 0;
+  color: #0c4a6e;
+  font-size: 0.95rem;
+}
+
+.helpful-resources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.helpful-resources-list .resource-card {
+  margin: 0;
+  box-shadow: 0 2px 8px rgba(3, 105, 161, 0.15);
+}
+
