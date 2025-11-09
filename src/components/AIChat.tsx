@@ -397,16 +397,19 @@ export default function AIChat({ onDataExtracted, onShowResources, initialRespon
                 📍 {detectedCity} {language === 'es' ? '(tu ubicación)' : '(your location)'}
               </button>
             )}
-            {onboardingQuestions[onboardingStep].quickActions!.map((action, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleQuickResponse(action.value)}
-                className="quick-action-btn"
-                disabled={isProcessing}
-              >
-                {action.label[language]}
-              </button>
-            ))}
+            {/* Filter out detected city from preset quick actions to avoid duplicates */}
+            {onboardingQuestions[onboardingStep].quickActions!
+              .filter(action => !(onboardingQuestions[onboardingStep].field === 'location' && detectedCity && action.value.toLowerCase() === detectedCity.toLowerCase()))
+              .map((action, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleQuickResponse(action.value)}
+                  className="quick-action-btn"
+                  disabled={isProcessing}
+                >
+                  {action.label[language]}
+                </button>
+              ))}
           </div>
         )}
 

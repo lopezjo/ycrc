@@ -42,6 +42,7 @@ export default function ChatInterface() {
   const [answerCache, setAnswerCache] = useState<UserResponse>({}) // Cache of ALL answers ever given
   const [inputValue, setInputValue] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
+  const [detectedCity, setDetectedCity] = useState<string | null>(null)
   
   // Note: answerCache contains all answers ever given, even to questions that are no longer eligible
   // For now it's write-only, will be used later for restoration
@@ -136,6 +137,46 @@ export default function ChatInterface() {
       saveSession(responses, questionIndex, messages, currentQuestionId)
     }
   }, [responses, currentQuestionId, messages])
+
+  // Detect user's location on mount
+  useEffect(() => {
+    const detectLocation = async () => {
+      try {
+        // Try browser geolocation API first
+        if ('geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              const { latitude, longitude } = position.coords
+              console.log('🌍 [Location] Got coordinates:', latitude, longitude)
+
+              // Reverse geocode to get city name
+              try {
+                const response = await fetch(
+                  `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
+                )
+                const data = await response.json()
+                const city = data.address?.city || data.address?.town || data.address?.county
+                if (city) {
+                  console.log('🌍 [Location] Detected city:', city)
+                  setDetectedCity(city)
+                }
+              } catch (err) {
+                console.log('🌍 [Location] Reverse geocoding failed:', err)
+              }
+            },
+            (error) => {
+              console.log('🌍 [Location] Geolocation denied or failed:', error.message)
+            },
+            { timeout: 5000, enableHighAccuracy: false }
+          )
+        }
+      } catch (err) {
+        console.log('🌍 [Location] Detection failed:', err)
+      }
+    }
+
+    detectLocation()
+  }, [])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -784,17 +825,32 @@ export default function ChatInterface() {
                 {/* Show suggested responses for text questions */}
                 {currentQuestion.type !== 'yesno' && Array.isArray(currentQuestion.suggestedResponses) && currentQuestion.suggestedResponses.length > 0 && (
                   <div className="quick-responses-row">
-                    {currentQuestion.suggestedResponses.map((response) => (
+                    {/* Show detected location first if this is the location question and we have it */}
+                    {currentQuestion.field === 'location' && detectedCity && (
                       <button
-                        key={response}
                         type="button"
-                        className="quick-response-button"
+                        className="quick-response-button detected-location"
                         disabled={isProcessing}
-                        onClick={() => handleOptionSelect(response)}
+                        onClick={() => handleOptionSelect(detectedCity)}
+                        style={{ backgroundColor: '#e3f2fd', border: '2px solid #1976d2' }}
                       >
-                        {response}
+                        📍 {detectedCity} {language === 'es' ? '(tu ubicación)' : '(your location)'}
                       </button>
-                    ))}
+                    )}
+                    {/* Filter out the detected city from preset suggestions to avoid duplicates */}
+                    {currentQuestion.suggestedResponses
+                      .filter(response => !(currentQuestion.field === 'location' && detectedCity && response.toLowerCase() === detectedCity.toLowerCase()))
+                      .map((response) => (
+                        <button
+                          key={response}
+                          type="button"
+                          className="quick-response-button"
+                          disabled={isProcessing}
+                          onClick={() => handleOptionSelect(response)}
+                        >
+                          {response}
+                        </button>
+                      ))}
                   </div>
                 )}
               </>
