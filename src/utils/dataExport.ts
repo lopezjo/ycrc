@@ -1,11 +1,12 @@
 import { UserResponse, Resource } from '../types'
 import { findResourcesForBarriers } from './barrierResources'
+import { getUserId } from './session'
 
 export interface ProviderDataExport {
   // Metadata
   exportDate: string
   exportVersion: string
-  youthId?: string // Optional anonymized ID
+  youthId: string // Unique persistent identifier
   
   // Basic Demographics
   demographics: {
@@ -65,6 +66,7 @@ export function generateProviderExport(
   const exportData: ProviderDataExport = {
     exportDate: new Date().toISOString(),
     exportVersion: '1.0',
+    youthId: getUserId(), // Include unique persistent identifier
     
     demographics: {
       age: responses.age ? Number(responses.age) : undefined,
@@ -159,6 +161,7 @@ export function downloadJSON(data: ProviderDataExport, filename: string = 'youth
 
 // HMIS-compatible format (simplified version)
 export interface HMISExport {
+  YouthID: string // Unique persistent identifier
   PersonalInformation: {
     Name?: string // Optional - privacy first
     DateOfBirth?: string
@@ -194,6 +197,7 @@ export interface HMISExport {
 
 export function generateHMISFormat(responses: UserResponse): HMISExport {
   return {
+    YouthID: getUserId(), // Include unique persistent identifier
     PersonalInformation: {
       Age: responses.age ? Number(responses.age) : undefined
     },

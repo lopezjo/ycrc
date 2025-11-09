@@ -4,7 +4,7 @@ import { questionFlow } from '../data/questions'
 import { resources } from '../data/resources'
 import { consentInfo } from '../data/consent'
 import { classifyAllResources } from '../utils/eligibility'
-import { saveSession, loadSession, clearSession, saveConsent, hasConsent } from '../utils/session'
+import { saveSession, loadSession, clearSession, saveConsent, hasConsent, getUserId } from '../utils/session'
 import { 
   getNextQuestionId, 
   getQuestionById, 
@@ -57,6 +57,13 @@ export default function ChatInterface() {
   // Get current question
   const currentQuestion = getQuestionById(questionFlow, currentQuestionId)
   const currentQuestionIndex = getQuestionIndex(questionFlow, currentQuestionId)
+
+  // Initialize user ID on app load
+  useEffect(() => {
+    // Generate/retrieve user ID immediately when app loads
+    const userId = getUserId()
+    console.log('User ID initialized:', userId)
+  }, [])
 
   // Load session on mount
   useEffect(() => {

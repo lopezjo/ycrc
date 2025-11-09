@@ -2,7 +2,38 @@ import { SessionData, Message, UserResponse } from '../types'
 
 const SESSION_KEY = 'youth-navigator-session'
 const CONSENT_KEY = 'youth-navigator-consent'
+const USER_ID_KEY = 'youth-navigator-uid'
 const COOKIE_EXPIRY_DAYS = 7
+const USER_ID_EXPIRY_YEARS = 10 // Non-expiring for practical purposes
+
+// Generate a globally unique identifier (UUID v4 format)
+function generateUniqueId(): string {
+  // Use crypto.randomUUID() if available (modern browsers)
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID()
+  }
+  
+  // Fallback to manual UUID v4 generation with crypto.getRandomValues if available
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const buffer = new Uint8Array(16)
+    crypto.getRandomValues(buffer)
+    
+    // Set version (4) and variant bits
+    buffer[6] = (buffer[6] & 0x0f) | 0x40 // Version 4
+    buffer[8] = (buffer[8] & 0x3f) | 0x80 // Variant 10
+    
+    // Convert to hex string with proper formatting
+    const hex = Array.from(buffer, (byte) => byte.toString(16).padStart(2, '0')).join('')
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`
+  }
+  
+  // Final fallback using Math.random (less secure but still functional)
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0
+    const v = c === 'x' ? r : (r & 0x3 | 0x8)
+    return v.toString(16)
+  })
+}
 
 // Cookie utilities
 function setCookie(name: string, value: string, days: number): void {
@@ -25,6 +56,36 @@ function getCookie(name: string): string | null {
 
 function deleteCookie(name: string): void {
   document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`
+}
+
+// Get or create unique user identifier
+export function getUserId(): string {
+  // First check if we already have a user ID in cookies
+  let userId = getCookie(USER_ID_KEY)
+  
+  if (!userId) {
+    // Check localStorage as fallback (for migration)
+    try {
+      userId = localStorage.getItem(USER_ID_KEY)
+    } catch (error) {
+      // localStorage might not be available
+    }
+  }
+  
+  if (!userId) {
+    // Generate new unique ID
+    userId = generateUniqueId()
+  }
+  
+  // Store in both cookie (primary) and localStorage (backup)
+  try {
+    setCookie(USER_ID_KEY, userId, USER_ID_EXPIRY_YEARS * 365) // 10 years
+    localStorage.setItem(USER_ID_KEY, userId)
+  } catch (error) {
+    console.warn('Failed to store user ID:', error)
+  }
+  
+  return userId
 }
 
 export function saveSession(
@@ -122,8 +183,24 @@ export function clearSession(): void {
   try {
     localStorage.removeItem(SESSION_KEY)
     deleteCookie(SESSION_KEY)
+    // Note: We intentionally do NOT clear the user ID here
+    // as it should persist across session clears
   } catch (error) {
     console.error('Failed to clear session:', error)
+  }
+}
+
+// Function to clear ALL data including user ID (for privacy/reset)
+export function clearAllData(): void {
+  try {
+    localStorage.removeItem(SESSION_KEY)
+    localStorage.removeItem(CONSENT_KEY)
+    localStorage.removeItem(USER_ID_KEY)
+    deleteCookie(SESSION_KEY)
+    deleteCookie(CONSENT_KEY)
+    deleteCookie(USER_ID_KEY)
+  } catch (error) {
+    console.error('Failed to clear all data:', error)
   }
 }
 
