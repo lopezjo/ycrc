@@ -83,7 +83,8 @@ export interface UserResponse {
 
 export interface SessionData {
   responses: UserResponse
-  currentQuestionIndex: number
+  currentQuestionIndex: number // Legacy field for backwards compatibility
+  currentQuestionId?: string // New field for current question ID
   messages: Message[]
   timestamp: number
   consentGiven: boolean

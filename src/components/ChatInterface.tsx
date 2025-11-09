@@ -65,24 +65,34 @@ export default function ChatInterface() {
       setMessages(session.messages)
       setResponses(session.responses)
       
-      // Convert legacy index-based sessions to ID-based
-      if (typeof session.currentQuestionIndex === 'number') {
+      // Determine the current question ID
+      let currentQuestionIdFromSession = 'initial'
+      
+      // Use stored question ID if available (new format)
+      if (session.currentQuestionId) {
+        currentQuestionIdFromSession = session.currentQuestionId
+      } else if (typeof session.currentQuestionIndex === 'number') {
+        // Convert legacy index-based sessions to ID-based
         const legacyQuestion = questionFlow[session.currentQuestionIndex]
         if (legacyQuestion) {
-          setCurrentQuestionId(legacyQuestion.id)
+          currentQuestionIdFromSession = legacyQuestion.id
         }
       }
       
+      // Get the next question ID based on current responses
+      const nextQuestionId = getNextQuestionId(questionFlow, session.responses, currentQuestionIdFromSession)
+      
       // Check if we should show resources or continue with questions
-      if (isQuestionFlowComplete(questionFlow, session.responses, currentQuestionId)) {
+      if (nextQuestionId === null || isQuestionFlowComplete(questionFlow, session.responses, currentQuestionIdFromSession)) {
+        // Flow is complete - show resources/results
+        console.log('Session restored: Flow complete, showing resources')
         setShowResources(true)
+        setCurrentQuestionId('completed') // Set to a special state to indicate completion
       } else {
         // Continue from where they left off
-        const nextQuestionId = getNextQuestionId(questionFlow, session.responses)
-        if (nextQuestionId) {
-          setCurrentQuestionId(nextQuestionId)
-          askQuestionById(nextQuestionId, false)
-        }
+        console.log('Session restored: Continuing from question', nextQuestionId)
+        setCurrentQuestionId(nextQuestionId)
+        askQuestionById(nextQuestionId, false)
       }
     } else {
       setShowConsent(true)
@@ -95,7 +105,7 @@ export default function ChatInterface() {
     if (hasConsent() && messages.length > 0) {
       // Convert questionId back to index for legacy session format
       const questionIndex = getQuestionIndex(questionFlow, currentQuestionId)
-      saveSession(responses, questionIndex, messages)
+      saveSession(responses, questionIndex, messages, currentQuestionId)
     }
   }, [responses, currentQuestionId, messages])
 
@@ -230,9 +240,14 @@ export default function ChatInterface() {
     setIsProcessing(true)
 
     if (currentQuestion) {
-      const responseValue = currentQuestion.field === 'situation' 
-        ? getPrimarySituation(option)  // Normalize situation responses
-        : option
+      let responseValue: string | number | boolean = option
+      
+      // Convert response based on question type
+      if (currentQuestion.type === 'yesno') {
+        responseValue = /^(yes|y|true|1)$/i.test(option)
+      } else if (currentQuestion.field === 'situation') {
+        responseValue = getPrimarySituation(option)  // Normalize situation responses
+      }
         
       setResponses((prev: UserResponse) => ({
         ...prev,
