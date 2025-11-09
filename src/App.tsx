@@ -31,11 +31,7 @@ function AppContent() {
   }, [])
 
   const handleModeSwitch = (newMode: IntakeMode) => {
-    if (confirm(language === 'es'
-      ? '¿Cambiar de modo? Tu progreso se guardará.'
-      : 'Switch modes? Your progress will be saved.')) {
-      setMode(newMode)
-    }
+    setMode(newMode)
   }
 
   const handleConsentAccept = () => {

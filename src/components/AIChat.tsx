@@ -155,6 +155,51 @@ export default function AIChat({ onDataExtracted, onShowResources, initialRespon
           const extraction = await analyzeUserMessage(messageText, responses, language)
           console.log('🔵 [AIChat Onboarding] Extraction result:', extraction)
 
+          // CHECK FOR DISTRESS DURING ONBOARDING
+          if (extraction.distressDetected) {
+            console.log('🔴 [AIChat Onboarding] Distress detected during onboarding:', extraction.distressLevel, extraction.distressIndicators)
+
+            // Show empathetic response immediately
+            const distressResponse: Message = {
+              id: `distress-response-${Date.now()}`,
+              text: extraction.empathicResponse,
+              sender: 'assistant',
+              timestamp: new Date(),
+              type: 'response'
+            }
+            setMessages(prev => [...prev, distressResponse])
+
+            // Add supportive message based on distress level
+            setTimeout(() => {
+              let supportMessage = ''
+
+              if (extraction.distressLevel === 'crisis' || extraction.distressLevel === 'severe') {
+                supportMessage = language === 'es'
+                  ? '💚 Tu bienestar es lo más importante. No necesitas responder ninguna pregunta ahora mismo. ¿Te gustaría ver recursos de crisis, o prefieres tomarte un momento? También puedes omitir cualquier pregunta.'
+                  : "💚 Your wellbeing is what matters most. You don't need to answer any questions right now. Would you like to see crisis resources, or would you prefer to take a moment? You can also skip any questions."
+              } else if (extraction.distressLevel === 'moderate') {
+                supportMessage = language === 'es'
+                  ? '💙 No hay prisa. Puedes omitir cualquier pregunta o simplemente tomarte un descanso. Estoy aquí cuando estés listo/a.'
+                  : "💙 There's no rush. You can skip any questions or just take a break. I'm here when you're ready."
+              } else if (extraction.distressLevel === 'mild') {
+                supportMessage = language === 'es'
+                  ? '💛 Está bien ir a tu propio ritmo. Puedes omitir cualquier pregunta.'
+                  : "💛 It's okay to go at your own pace. You can skip any questions."
+              }
+
+              if (supportMessage) {
+                const supportMsg: Message = {
+                  id: `distress-support-onboarding-${Date.now()}`,
+                  text: supportMessage,
+                  sender: 'assistant',
+                  timestamp: new Date(),
+                  type: 'context'
+                }
+                setMessages(prev => [...prev, supportMsg])
+              }
+            }, 800)
+          }
+
           // Save the response based on field type
           if (currentQuestion.field === 'age') {
             // Check if this was a quick action button with a numericValue
@@ -278,6 +323,43 @@ export default function AIChat({ onDataExtracted, onShowResources, initialRespon
         type: 'response'
       }
       setMessages(prev => [...prev, aiResponse])
+
+      // Handle distress detection - add supportive message
+      if (analysis.distressDetected) {
+        console.log('🔴 [AIChat] Distress detected:', analysis.distressLevel, analysis.distressIndicators)
+
+        setTimeout(() => {
+          let supportMessage = ''
+
+          if (analysis.distressLevel === 'crisis' || analysis.distressLevel === 'severe') {
+            // For crisis/severe: Offer crisis resources and affirm their control
+            supportMessage = language === 'es'
+              ? '💚 Recuerda: puedes pausar en cualquier momento, omitir cualquier pregunta, o simplemente tomarte un descanso. No hay prisa. También puedo mostrarte recursos de crisis ahora mismo si lo necesitas.'
+              : "💚 Remember: you can pause at any time, skip any questions, or just take a break. There's no rush. I can also show you crisis resources right now if you need them."
+          } else if (analysis.distressLevel === 'moderate') {
+            // For moderate: Gentle reminder about pacing
+            supportMessage = language === 'es'
+              ? '💙 Está bien ir despacio. Puedes omitir cualquier pregunta o tomar un descanso cuando lo necesites. Estoy aquí para ayudarte.'
+              : "💙 It's okay to go slowly. You can skip any questions or take a break whenever you need. I'm here to help."
+          } else if (analysis.distressLevel === 'mild') {
+            // For mild: Brief acknowledgment
+            supportMessage = language === 'es'
+              ? '💛 Recuerda que puedes ir a tu propio ritmo. No hay presión.'
+              : "💛 Remember you can go at your own pace. No pressure."
+          }
+
+          if (supportMessage) {
+            const supportMsg: Message = {
+              id: `distress-support-${Date.now()}`,
+              text: supportMessage,
+              sender: 'assistant',
+              timestamp: new Date(),
+              type: 'context'
+            }
+            setMessages(prev => [...prev, supportMsg])
+          }
+        }, 1000) // Delay to let the empathic response be read first
+      }
 
       // If urgent or enough info collected, offer to show resources
       if (analysis.needsImmediateHelp || messageCount >= 2) {
