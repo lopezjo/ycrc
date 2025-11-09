@@ -65,6 +65,10 @@
   padding-bottom: 0.5rem;
 }
 
+.onboarding-actions {
+  justify-content: center;
+}
+
 .quick-action-btn {
   padding: 0.5rem 1rem;
   background: #f0f4ff;
@@ -97,6 +101,19 @@
   background: #ff9800;
   color: white;
   box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+}
+
+.quick-action-btn.detected-location {
+  background: #e8f5e9;
+  border-color: #4caf50;
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+.quick-action-btn.detected-location:hover {
+  background: #4caf50;
+  color: white;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
 }
 
 .show-resources-btn {

@@ -45,13 +45,19 @@ An AI-powered, trauma-informed intake system designed to help homeless youth fin
 - **Resource Assessments**: Detailed barrier analysis for each program
 - **Provider Preview**: See exactly what case workers will receive
 
+## 🚀 Quick Start
+
+**TL;DR**: `make dev` → Open http://localhost:5173 → Start chatting!
+
+See [QUICKSTART.md](./QUICKSTART.md) for a step-by-step guide.
+
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js (v18 or higher)
 - npm or yarn
-- Optional: OpenAI API key for real AI (works without it in demo mode)
+- Optional: Anthropic API key for real AI (works without it in demo mode)
 
 ### Installation
 
@@ -63,7 +69,8 @@ cd ycrc
 
 2. Install dependencies:
 ```bash
-npm install
+make install
+# or: npm install
 ```
 
 3. (Optional) Configure AI:
@@ -73,12 +80,25 @@ cp .env.example .env
 # See DEBUGGING_GUIDE.md for troubleshooting
 ```
 
-4. Start the development server:
+4. Start all development servers (frontend + proxy):
 ```bash
-npm run dev
+make dev
+# or: make run
 ```
 
+This starts:
+- 📱 Frontend: http://localhost:5173
+- 🔌 Proxy server: http://localhost:3001
+
 5. Open your browser to `http://localhost:5173`
+
+**Other useful commands:**
+```bash
+make stop      # Stop all servers
+make build     # Build for production
+make clean     # Clean dependencies and build files
+make help      # Show all available commands
+```
 
 ### Building for Production
 

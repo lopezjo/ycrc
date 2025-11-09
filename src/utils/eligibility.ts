@@ -1,5 +1,6 @@
 import { Resource, UserResponse, EligibilityResult } from '../types'
 import { doesSituationMatch } from './situationMapping'
+import { checkLocationMatch } from './locationMatching'
 
 export function checkEligibility(resource: Resource, responses: UserResponse): boolean {
   const result = checkEligibilityDetailed(resource, responses)
@@ -42,19 +43,18 @@ export function checkEligibilityDetailed(resource: Resource, responses: UserResp
     }
   }
 
-  // Check location (CRITICAL for matching)
+  // Check location (CRITICAL for matching) with proximity support
   if (criteria.location && criteria.location.length > 0) {
-    const userLocation = String(responses.location || '').toLowerCase()
+    const userLocation = String(responses.location || '')
     if (!userLocation) {
       criticalMissingInfo.push('location')
       missingInfo.push('location')
     } else {
-      const matches = criteria.location.some(loc =>
-        userLocation.includes(loc.toLowerCase())
-      )
-      if (!matches) {
-        reasons.push(`This program is only available in: ${criteria.location.join(', ')}`)
+      const locationMatch = checkLocationMatch(userLocation, criteria.location)
+      if (!locationMatch.matches) {
+        reasons.push(locationMatch.reason || `This program is only available in: ${criteria.location.join(', ')}`)
       }
+      // Note: We don't add a reason if it matches nearby - they're still eligible
     }
   }
 
@@ -203,7 +203,7 @@ export function classifyAllResources(resources: Resource[], responses: UserRespo
 
   resources.forEach(resource => {
     const result = checkEligibilityDetailed(resource, responses)
-    
+
     if (result.eligible) {
       eligible.push(resource)
     } else if (result.reasons && result.reasons.length > 0) {
@@ -218,14 +218,35 @@ export function classifyAllResources(resources: Resource[], responses: UserRespo
     }
   })
 
-  // Sort eligible resources
+  // Sort eligible resources by proximity first, then urgency/priority
+  const userLocation = String(responses.location || '')
   eligible.sort((a, b) => {
+    // Calculate distance for each resource
+    let aDistance = Infinity
+    let bDistance = Infinity
+
+    if (userLocation && a.eligibility.location) {
+      const aMatch = checkLocationMatch(userLocation, a.eligibility.location)
+      aDistance = aMatch.distance
+    }
+    if (userLocation && b.eligibility.location) {
+      const bMatch = checkLocationMatch(userLocation, b.eligibility.location)
+      bDistance = bMatch.distance
+    }
+
+    // First sort by urgency (critical resources always first)
     if (a.urgent && !b.urgent) return -1
     if (!a.urgent && b.urgent) return 1
+
+    // Then by proximity (closer resources first)
+    if (aDistance !== bDistance) return aDistance - bDistance
+
+    // Then by priority
     const priorityOrder = { high: 0, medium: 1, low: 2 }
     const aPriority = priorityOrder[a.priority || 'low']
     const bPriority = priorityOrder[b.priority || 'low']
     if (aPriority !== bPriority) return aPriority - bPriority
+
     return 0
   })
 

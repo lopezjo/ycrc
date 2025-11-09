@@ -9,9 +9,10 @@ interface AIChatProps {
   onDataExtracted: (data: UserResponse) => void
   onShowResources: () => void
   initialResponses: UserResponse
+  isVisible?: boolean
 }
 
-export default function AIChat({ onDataExtracted, onShowResources, initialResponses }: AIChatProps) {
+export default function AIChat({ onDataExtracted, onShowResources, initialResponses, isVisible = true }: AIChatProps) {
   const { language } = useLanguage()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
@@ -20,30 +21,82 @@ export default function AIChat({ onDataExtracted, onShowResources, initialRespon
   const [messageCount, setMessageCount] = useState(0)
   const [onboardingStep, setOnboardingStep] = useState(0)
   const [useAI, setUseAI] = useState(false)
+  const [detectedCity, setDetectedCity] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  // Onboarding questions
+  // Onboarding questions with quick action buttons
   const onboardingQuestions = [
     {
       en: "Hey! Welcome. I'm here to help you find resources and support that might be helpful for you.\n\nBefore we start, I'd love to know what to call you. What's your name? (You can skip this if you'd prefer not to share)",
       es: "¡Hola! Bienvenido/a. Estoy aquí para ayudarte a encontrar recursos y apoyo que puedan serte útiles.\n\nAntes de comenzar, me gustaría saber cómo llamarte. ¿Cuál es tu nombre? (Puedes omitir esto si prefieres no compartirlo)",
       field: 'name',
-      optional: true
+      optional: true,
+      quickActions: null
     },
     {
       en: "Thanks{name}! To help match you with the right resources, can you share how old you are?\n\n(This helps me find programs specifically for your age group. It's okay to skip if you're not comfortable sharing)",
       es: "¡Gracias{name}! Para ayudarte a encontrar los recursos adecuados, ¿puedes compartir cuántos años tienes?\n\n(Esto me ayuda a encontrar programas específicos para tu grupo de edad. Está bien omitirlo si no te sientes cómodo/a compartiéndolo)",
       field: 'age',
-      optional: true
+      optional: true,
+      quickActions: [
+        { label: { en: '13-17', es: '13-17' }, value: '16' },
+        { label: { en: '18-24', es: '18-24' }, value: '20' }
+      ]
     },
     {
       en: "Got it. What city or area are you in right now?\n\n(This helps me show you resources that are actually nearby and available to you. You can skip this too)",
       es: "Entendido. ¿En qué ciudad o área te encuentras ahora?\n\n(Esto me ayuda a mostrarte recursos que realmente están cerca y disponibles para ti. También puedes omitir esto)",
       field: 'location',
-      optional: true
+      optional: true,
+      quickActions: [
+        { label: { en: 'San Francisco', es: 'San Francisco' }, value: 'San Francisco' },
+        { label: { en: 'Oakland', es: 'Oakland' }, value: 'Oakland' },
+        { label: { en: 'San Jose', es: 'San Jose' }, value: 'San Jose' },
+        { label: { en: 'Los Angeles', es: 'Los Angeles' }, value: 'Los Angeles' }
+      ]
     }
   ]
+
+  // Detect user's location on mount
+  useEffect(() => {
+    const detectLocation = async () => {
+      try {
+        // Try browser geolocation API first
+        if ('geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              const { latitude, longitude } = position.coords
+              console.log('🌍 [Location] Got coordinates:', latitude, longitude)
+
+              // Reverse geocode to get city name
+              try {
+                const response = await fetch(
+                  `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
+                )
+                const data = await response.json()
+                const city = data.address?.city || data.address?.town || data.address?.county
+                if (city) {
+                  console.log('🌍 [Location] Detected city:', city)
+                  setDetectedCity(city)
+                }
+              } catch (err) {
+                console.log('🌍 [Location] Reverse geocoding failed:', err)
+              }
+            },
+            (error) => {
+              console.log('🌍 [Location] Geolocation denied or failed:', error.message)
+            },
+            { timeout: 5000, enableHighAccuracy: false }
+          )
+        }
+      } catch (err) {
+        console.log('🌍 [Location] Detection failed:', err)
+      }
+    }
+
+    detectLocation()
+  }, [])
 
   useEffect(() => {
     // Initial greeting
@@ -62,8 +115,10 @@ export default function AIChat({ onDataExtracted, onShowResources, initialRespon
   }, [messages])
 
   useEffect(() => {
-    inputRef.current?.focus()
-  }, [messages, isProcessing])
+    if (isVisible) {
+      inputRef.current?.focus()
+    }
+  }, [messages, isProcessing, isVisible])
 
   const handleSend = async () => {
     if (!inputValue.trim() || isProcessing) return
@@ -306,6 +361,32 @@ export default function AIChat({ onDataExtracted, onShowResources, initialRespon
       </div>
 
       <div className="ai-chat-input">
+        {/* Quick action buttons for onboarding */}
+        {!useAI && onboardingStep < onboardingQuestions.length && onboardingQuestions[onboardingStep].quickActions && (
+          <div className="quick-actions onboarding-actions">
+            {/* Show detected location first if available and this is the location question */}
+            {onboardingQuestions[onboardingStep].field === 'location' && detectedCity && (
+              <button
+                onClick={() => handleQuickResponse(detectedCity)}
+                className="quick-action-btn detected-location"
+                disabled={isProcessing}
+              >
+                📍 {detectedCity} {language === 'es' ? '(tu ubicación)' : '(your location)'}
+              </button>
+            )}
+            {onboardingQuestions[onboardingStep].quickActions!.map((action, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleQuickResponse(action.value)}
+                className="quick-action-btn"
+                disabled={isProcessing}
+              >
+                {action.label[language]}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Skip button during onboarding */}
         {!useAI && onboardingStep < onboardingQuestions.length && (
           <button
@@ -317,7 +398,7 @@ export default function AIChat({ onDataExtracted, onShowResources, initialRespon
           </button>
         )}
 
-        {/* Quick action buttons for AI conversation */}
+        {/* Quick action buttons for AI conversation - common needs */}
         {useAI && messages.length <= 5 && (
           <div className="quick-actions">
             <button
@@ -337,6 +418,12 @@ export default function AIChat({ onDataExtracted, onShowResources, initialRespon
               className="quick-action-btn"
             >
               📚 {language === 'es' ? 'Ayuda escolar' : 'School help'}
+            </button>
+            <button
+              onClick={() => handleQuickResponse(language === 'es' ? 'Necesito ayuda con salud mental' : 'I need mental health support')}
+              className="quick-action-btn"
+            >
+              💚 {language === 'es' ? 'Salud mental' : 'Mental health'}
             </button>
           </div>
         )}

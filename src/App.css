@@ -111,6 +111,10 @@
   color: white;
 }
 
+.hidden-view {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .header-top {
     flex-direction: column;

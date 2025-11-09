@@ -62,11 +62,12 @@ function AppContent() {
 
       {mode === 'ai' && (
         <>
-          <div style={{ display: showAIResources ? 'none' : 'block' }}>
+          <div className={showAIResources ? 'hidden-view' : ''}>
             <AIChat
               initialResponses={aiResponses}
               onDataExtracted={setAIResponses}
               onShowResources={() => setShowAIResources(true)}
+              isVisible={!showAIResources}
             />
           </div>
 
