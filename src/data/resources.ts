@@ -5,13 +5,13 @@ export const resources: Resource[] = [
     id: 'shelter-1',
     name: 'Youth Emergency Shelter',
     description: '24/7 emergency shelter for youth ages 16-24',
-    category: 'Housing',
+    category: ['Housing'],
     eligibility: {
       age: { min: 16, max: 24 },
       situation: ['homeless', 'at-risk']
     },
     contact: {
-      phone: '(555) 123-4567',
+      phone: ['(555) 123-4567'],
       address: '123 Main Street, City, State'
     },
     hours: '24/7',
@@ -61,13 +61,13 @@ export const resources: Resource[] = [
     id: 'shelter-2',
     name: 'Transitional Living Program',
     description: 'Long-term housing support for youth 18-21',
-    category: 'Housing',
+    category: ['Housing'],
     eligibility: {
       age: { min: 18, max: 21 },
       duration: 'long-term'
     },
     contact: {
-      phone: '(555) 234-5678',
+      phone: ['(555) 234-5678'],
       email: 'tlp@example.org'
     },
     hours: 'Mon-Fri 9am-5pm'
@@ -76,12 +76,12 @@ export const resources: Resource[] = [
     id: 'food-1',
     name: 'Youth Food Bank',
     description: 'Free meals and groceries for youth in need',
-    category: 'Food',
+    category: ['Food'],
     eligibility: {
       age: { max: 25 }
     },
     contact: {
-      phone: '(555) 345-6789',
+      phone: ['(555) 345-6789'],
       address: '456 Oak Avenue, City, State'
     },
     hours: 'Mon-Sat 10am-6pm'
@@ -90,12 +90,12 @@ export const resources: Resource[] = [
     id: 'health-1',
     name: 'Youth Health Clinic',
     description: 'Free medical and mental health services',
-    category: 'Healthcare',
+    category: ['Healthcare'],
     eligibility: {
       age: { max: 24 }
     },
     contact: {
-      phone: '(555) 456-7890',
+      phone: ['(555) 456-7890'],
       website: 'www.youthhealth.org'
     },
     hours: 'Mon-Fri 8am-8pm'
@@ -104,12 +104,12 @@ export const resources: Resource[] = [
     id: 'education-1',
     name: 'Education Support Center',
     description: 'Help with school enrollment, GED prep, and college applications',
-    category: 'Education',
+    category: ['Education'],
     eligibility: {
       inSchool: true
     },
     contact: {
-      phone: '(555) 567-8901',
+      phone: ['(555) 567-8901'],
       email: 'education@example.org'
     },
     hours: 'Mon-Fri 9am-5pm'
@@ -118,12 +118,12 @@ export const resources: Resource[] = [
     id: 'legal-1',
     name: 'Youth Legal Aid',
     description: 'Free legal assistance for youth issues',
-    category: 'Legal',
+    category: ['Legal'],
     eligibility: {
       age: { max: 24 }
     },
     contact: {
-      phone: '(555) 678-9012',
+      phone: ['(555) 678-9012'],
       website: 'www.youthlegal.org'
     },
     hours: 'Mon-Fri 10am-4pm'
@@ -132,13 +132,13 @@ export const resources: Resource[] = [
     id: 'job-1',
     name: 'Youth Employment Program',
     description: 'Job training, placement, and career counseling',
-    category: 'Employment',
+    category: ['Employment'],
     eligibility: {
       age: { min: 16, max: 24 },
       hasIncome: false
     },
     contact: {
-      phone: '(555) 789-0123',
+      phone: ['(555) 789-0123'],
       email: 'jobs@example.org'
     },
     hours: 'Mon-Fri 9am-5pm'
@@ -147,12 +147,12 @@ export const resources: Resource[] = [
     id: 'id-1',
     name: 'ID Assistance Program',
     description: 'Help obtaining identification documents',
-    category: 'Documentation',
+    category: ['Documentation'],
     eligibility: {
       hasId: false
     },
     contact: {
-      phone: '(555) 890-1234',
+      phone: ['(555) 890-1234'],
       address: '789 Pine Street, City, State'
     },
     hours: 'Mon-Fri 10am-3pm'
@@ -161,13 +161,13 @@ export const resources: Resource[] = [
     id: 'transport-1',
     name: 'Transportation Assistance Program',
     description: 'Free bus passes, gas vouchers, and ride assistance for youth in crisis',
-    category: 'Transportation',
+    category: ['Transportation'],
     eligibility: {
       age: { max: 24 },
       situation: ['homeless', 'at-risk', 'car', 'transportation']
     },
     contact: {
-      phone: '(555) 901-2345',
+      phone: ['(555) 901-2345'],
       email: 'transport@youthservices.org'
     },
     hours: 'Mon-Fri 9am-5pm, Emergency: 24/7',
@@ -221,12 +221,12 @@ export const resources: Resource[] = [
     id: 'food-2',
     name: 'Emergency Food Assistance',
     description: 'Immediate food support - meals, groceries, and food vouchers',
-    category: 'Food',
+    category: ['Food'],
     eligibility: {
       age: { max: 25 }
     },
     contact: {
-      phone: '(555) 012-3456',
+      phone: ['(555) 012-3456'],
       address: '321 Elm Street, City, State'
     },
     hours: 'Daily 8am-8pm',
@@ -268,12 +268,12 @@ export const resources: Resource[] = [
     id: 'education-2',
     name: 'McKinney-Vento Education Rights',
     description: 'School enrollment help, transportation to school, and free school meals for homeless youth',
-    category: 'Education',
+    category: ['Education'],
     eligibility: {
       age: { max: 21 }
     },
     contact: {
-      phone: '(555) 123-4560',
+      phone: ['(555) 123-4560'],
       website: 'www.schoolsupport.org',
       email: 'mckinneyvento@schools.org'
     },
@@ -285,13 +285,13 @@ export const resources: Resource[] = [
     id: 'housing-3',
     name: 'Rapid Re-Housing for Youth',
     description: 'Quick housing placement with minimal barriers - helps with deposits and first month rent',
-    category: 'Housing',
+    category: ['Housing'],
     eligibility: {
       age: { min: 18, max: 24 },
       situation: ['homeless', 'car', 'unsheltered']
     },
     contact: {
-      phone: '(555) 234-5671',
+      phone: ['(555) 234-5671'],
       email: 'rapidrehousing@housing.org'
     },
     hours: 'Mon-Fri 9am-5pm',
@@ -302,12 +302,12 @@ export const resources: Resource[] = [
     id: 'multi-1',
     name: 'Youth Resource Center',
     description: 'One-stop center offering food, showers, laundry, case management, and resource navigation',
-    category: 'Multi-Service',
+    category: ['Multi-Service'],
     eligibility: {
       age: { max: 24 }
     },
     contact: {
-      phone: '(555) 345-6782',
+      phone: ['(555) 345-6782'],
       address: '555 Youth Way, City, State',
       website: 'www.youthresource.org'
     },
@@ -351,12 +351,12 @@ export const resources: Resource[] = [
     id: 'benefits-1',
     name: 'Benefits Navigation',
     description: 'Help applying for CalFresh (food stamps), Medi-Cal, and other benefits',
-    category: 'Benefits',
+    category: ['Benefits'],
     eligibility: {
       age: { max: 24 }
     },
     contact: {
-      phone: '(555) 456-7893',
+      phone: ['(555) 456-7893'],
       email: 'benefits@youthservices.org'
     },
     hours: 'Mon-Fri 10am-4pm',
@@ -367,17 +367,46 @@ export const resources: Resource[] = [
     id: 'crisis-1',
     name: '24/7 Youth Crisis Line',
     description: 'Immediate support, safety planning, and crisis intervention',
-    category: 'Crisis Support',
+    category: ['Crisis Support'],
     eligibility: {
       age: { max: 24 }
     },
     contact: {
-      phone: '(555) 567-8904',
+      phone: ['(555) 567-8904'],
       website: 'www.youthcrisis.org'
     },
     hours: '24/7',
     notes: 'Available anytime. Can help with immediate safety needs, emotional support, and connecting to resources.',
     priority: 'high'
+  },
+  {
+    id: 'comprehensive-center',
+    name: 'Youth Comprehensive Support Center',
+    description: 'Multi-service center providing housing assistance, food programs, and crisis support in one location',
+    category: ['Housing', 'Food', 'Crisis Support'], // Multiple categories
+    eligibility: {
+      age: { max: 24 }
+    },
+    contact: {
+      phone: ['(555) 999-1111', '(555) 999-2222'], // Multiple phone numbers - main and crisis line
+      email: 'help@youthcenter.org',
+      address: '100 Youth Support Way, City, State'
+    },
+    hours: 'Mon-Fri 8am-8pm, Crisis Line: 24/7',
+    notes: 'Comprehensive center serving multiple needs. Call main line during business hours, crisis line anytime.',
+    priority: 'high',
+    urgent: false,
+    whatItOffers: [
+      'Emergency housing assistance',
+      'Daily meals and food pantry',
+      'Crisis counseling and support',
+      'Case management services',
+      'Resource navigation and referrals'
+    ],
+    commonBarriers: [
+      'Transportation to center',
+      'May have waiting lists for some services'
+    ]
   }
 ]
 

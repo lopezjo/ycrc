@@ -159,8 +159,14 @@ export function filterEligibleResources(resources: Resource[], responses: UserRe
       'Legal': 9,
       'Documentation': 10
     }
-    const aCat = categoryOrder[a.category] ?? 99
-    const bCat = categoryOrder[b.category] ?? 99
+    
+    // For resources with multiple categories, use the highest priority (lowest number)
+    const getHighestPriorityCategory = (categories: string[]): number => {
+      return Math.min(...categories.map(cat => categoryOrder[cat] ?? 99))
+    }
+    
+    const aCat = getHighestPriorityCategory(a.category)
+    const bCat = getHighestPriorityCategory(b.category)
     return aCat - bCat
   })
 }

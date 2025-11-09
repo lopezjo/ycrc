@@ -17,7 +17,7 @@ export default function ResourceCard({ resource, onLearnMore }: ResourceCardProp
       )}
       <div className="resource-header">
         <h3 className="resource-name">{resource.name}</h3>
-        <span className="resource-category">{resource.category}</span>
+        <span className="resource-category">{resource.category.join(', ')}</span>
       </div>
       <p className="resource-description">{resource.description}</p>
       
@@ -28,10 +28,15 @@ export default function ResourceCard({ resource, onLearnMore }: ResourceCardProp
       )}
 
       <div className="resource-contact">
-        {resource.contact.phone && (
+        {resource.contact.phone && resource.contact.phone.length > 0 && (
           <div className="contact-item">
             <strong>{t('phone')}</strong>{' '}
-            <a href={`tel:${resource.contact.phone}`}>{resource.contact.phone}</a>
+            {resource.contact.phone.map((phone, index) => (
+              <span key={index}>
+                <a href={`tel:${phone}`}>{phone}</a>
+                {index < resource.contact.phone!.length - 1 && ', '}
+              </span>
+            ))}
           </div>
         )}
         {resource.contact.email && (

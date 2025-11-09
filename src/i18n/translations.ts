@@ -25,6 +25,7 @@ export interface Translations {
       text: string
       context: string
       youthFriendly: string
+      options: string[]
     }
     age: {
       text: string
@@ -57,6 +58,38 @@ export interface Translations {
       context: string
       youthFriendly: string
     }
+    // Housing-specific questions
+    housingDuration: {
+      text: string
+      context: string
+      youthFriendly: string
+      options: string[]
+    }
+    safePlaceTonight: {
+      text: string
+      context: string
+      youthFriendly: string
+    }
+    // Food-specific questions
+    foodFrequency: {
+      text: string
+      context: string
+      youthFriendly: string
+      options: string[]
+    }
+    // Mental health questions
+    crisisLevel: {
+      text: string
+      context: string
+      youthFriendly: string
+    }
+    // Education questions
+    schoolType: {
+      text: string
+      context: string
+      youthFriendly: string
+      options: string[]
+    }
   }
   
   // UI
@@ -71,6 +104,8 @@ export interface Translations {
   needSupport: string
   processing: string
   typeResponse: string
+  yes: string
+  no: string
   yesNo: string
   enterNumber: string
   canSkip: string
@@ -134,9 +169,17 @@ export const translations = {
     
     questions: {
       initial: {
-        text: 'Hey there. I\'m here to help you find resources that might work for you. Can you tell me a bit about what\'s going on right now? (For example: sleeping in your car, need a place to stay, looking for food, etc.)',
+        text: 'Hey there. I\'m here to help you find resources that might work for you. What\'s your main situation right now?',
         context: 'I\'m asking this so I can understand what you\'re dealing with and find the best resources for your situation. You can share as much or as little as you\'re comfortable with. I\'ll help you find multiple types of resources - not just one thing.',
-        youthFriendly: 'This helps me understand what you need so I can find the right help for you. I\'ll look for housing, food, transportation, and other resources all at once.'
+        youthFriendly: 'This helps me understand what you need so I can find the right help for you. I\'ll look for housing, food, transportation, and other resources all at once.',
+        options: [
+          'Need shelter/housing',
+          'Need food',
+          'Mental health support', 
+          'Education help',
+          'Job training/employment',
+          'Other/Multiple needs'
+        ]
       },
       age: {
         text: 'How old are you? (You can skip this if you prefer)',
@@ -173,6 +216,53 @@ export const translations = {
         text: 'Do you have any money coming in right now? Like from a job, benefits, or family helping out?',
         context: 'This helps me understand your situation better. If you don\'t have income, I can find programs that help with jobs, job training, or financial assistance. If you do have some income, I can find programs that work with your budget.',
         youthFriendly: 'This helps me find the right financial help or job programs for you.'
+      },
+      // Housing-specific questions
+      housingDuration: {
+        text: 'How long have you needed housing?',
+        context: 'This helps me understand if you need emergency shelter tonight or longer-term housing support. Different programs help with different timeframes.',
+        youthFriendly: 'This helps me find the right housing help for you.',
+        options: [
+          'Tonight only',
+          'A few days',
+          'Weeks',
+          'Months'
+        ]
+      },
+      safePlaceTonight: {
+        text: 'Do you have somewhere safe to stay tonight?',
+        context: 'If you don\'t have a safe place tonight, I\'ll prioritize emergency shelter resources. If you do, I can focus on longer-term housing options.',
+        youthFriendly: 'This helps me know if you need emergency help tonight or can focus on other housing options.'
+      },
+      // Food-specific questions
+      foodFrequency: {
+        text: 'How often do you need food assistance?',
+        context: 'Some programs provide meals daily, others give groceries weekly, and some help with emergency food. This helps me find what matches your needs.',
+        youthFriendly: 'This helps me find food programs that work for your schedule.',
+        options: [
+          'Right now',
+          'Daily',
+          'Weekly',
+          'Monthly'
+        ]
+      },
+      // Mental health questions
+      crisisLevel: {
+        text: 'Is this an emergency situation where you need help right away?',
+        context: 'If you\'re in crisis, I\'ll connect you with 24/7 support immediately. If not, I can help you find ongoing mental health resources.',
+        youthFriendly: 'This helps me know if you need emergency help or ongoing support.'
+      },
+      // Education questions
+      schoolType: {
+        text: 'What type of school are you in?',
+        context: 'Different schools have different support programs available. This helps me find resources specific to your education situation.',
+        youthFriendly: 'This helps me find school-specific support for you.',
+        options: [
+          'High school',
+          'College',
+          'Trade school',
+          'GED program'
+        ]
       }
     },
     
@@ -187,6 +277,8 @@ export const translations = {
     needSupport: '💙 Need Support?',
     processing: 'Processing...',
     typeResponse: 'Type your response...',
+    yes: 'Yes',
+    no: 'No',
     yesNo: '(Yes/No - or you can skip)',
     enterNumber: '(Enter a number - or skip)',
     canSkip: '(You can skip this if you prefer)',
@@ -244,9 +336,17 @@ export const translations = {
     
     questions: {
       initial: {
-        text: 'Hola. Estoy aquí para ayudarte a encontrar recursos que puedan funcionar para ti. ¿Puedes contarme un poco sobre lo que está pasando ahora mismo? (Por ejemplo: durmiendo en tu auto, necesitas un lugar para quedarte, buscando comida, etc.)',
+        text: 'Hola. Estoy aquí para ayudarte a encontrar recursos que puedan funcionar para ti. ¿Cuál es tu situación principal ahora mismo?',
         context: 'Pregunto esto para poder entender lo que estás enfrentando y encontrar los mejores recursos para tu situación. Puedes compartir tanto o tan poco como te sientas cómodo. Te ayudaré a encontrar múltiples tipos de recursos, no solo una cosa.',
-        youthFriendly: 'Esto me ayuda a entender lo que necesitas para poder encontrar la ayuda adecuada para ti. Buscaré vivienda, comida, transporte y otros recursos a la vez.'
+        youthFriendly: 'Esto me ayuda a entender lo que necesitas para poder encontrar la ayuda adecuada para ti. Buscaré vivienda, comida, transporte y otros recursos a la vez.',
+        options: [
+          'Necesito refugio/vivienda',
+          'Necesito comida',
+          'Apoyo de salud mental',
+          'Ayuda educativa',
+          'Capacitación laboral/empleo',
+          'Otras/Múltiples necesidades'
+        ]
       },
       age: {
         text: '¿Cuántos años tienes? (Puedes omitir esto si prefieres)',
@@ -283,6 +383,53 @@ export const translations = {
         text: '¿Tienes algún dinero entrando ahora mismo? ¿Como de un trabajo, beneficios o familia que ayuda?',
         context: 'Esto me ayuda a entender mejor tu situación. Si no tienes ingresos, puedo encontrar programas que ayudan con trabajos, capacitación laboral o asistencia financiera. Si tienes algunos ingresos, puedo encontrar programas que funcionan con tu presupuesto.',
         youthFriendly: 'Esto me ayuda a encontrar la ayuda financiera adecuada o programas de trabajo para ti.'
+      },
+      // Housing-specific questions
+      housingDuration: {
+        text: '¿Cuánto tiempo has necesitado vivienda?',
+        context: 'Esto me ayuda a entender si necesitas refugio de emergencia esta noche o apoyo de vivienda a largo plazo. Diferentes programas ayudan con diferentes marcos de tiempo.',
+        youthFriendly: 'Esto me ayuda a encontrar la ayuda de vivienda adecuada para ti.',
+        options: [
+          'Solo esta noche',
+          'Unos días',
+          'Semanas',
+          'Meses'
+        ]
+      },
+      safePlaceTonight: {
+        text: '¿Tienes algún lugar seguro donde quedarte esta noche?',
+        context: 'Si no tienes un lugar seguro esta noche, priorizaré los recursos de refugio de emergencia. Si lo tienes, puedo enfocarme en opciones de vivienda a largo plazo.',
+        youthFriendly: 'Esto me ayuda a saber si necesitas ayuda de emergencia esta noche o podemos enfocarnos en otras opciones de vivienda.'
+      },
+      // Food-specific questions
+      foodFrequency: {
+        text: '¿Con qué frecuencia necesitas asistencia alimentaria?',
+        context: 'Algunos programas proporcionan comidas diariamente, otros dan comestibles semanalmente, y algunos ayudan con comida de emergencia. Esto me ayuda a encontrar lo que coincida con tus necesidades.',
+        youthFriendly: 'Esto me ayuda a encontrar programas de comida que funcionen con tu horario.',
+        options: [
+          'Ahora mismo',
+          'Diariamente',
+          'Semanalmente',
+          'Mensualmente'
+        ]
+      },
+      // Mental health questions
+      crisisLevel: {
+        text: '¿Es esta una situación de emergencia donde necesitas ayuda inmediatamente?',
+        context: 'Si estás en crisis, te conectaré con apoyo 24/7 inmediatamente. Si no, puedo ayudarte a encontrar recursos de salud mental continua.',
+        youthFriendly: 'Esto me ayuda a saber si necesitas ayuda de emergencia o apoyo continuo.'
+      },
+      // Education questions
+      schoolType: {
+        text: '¿En qué tipo de escuela estás?',
+        context: 'Diferentes escuelas tienen diferentes programas de apoyo disponibles. Esto me ayuda a encontrar recursos específicos para tu situación educativa.',
+        youthFriendly: 'Esto me ayuda a encontrar apoyo específico de la escuela para ti.',
+        options: [
+          'Escuela secundaria',
+          'Universidad',
+          'Escuela técnica',
+          'Programa GED'
+        ]
       }
     },
     
@@ -297,6 +444,8 @@ export const translations = {
     needSupport: '💙 ¿Necesitas Apoyo?',
     processing: 'Procesando...',
     typeResponse: 'Escribe tu respuesta...',
+    yes: 'Sí',
+    no: 'No',
     yesNo: '(Sí/No - o puedes omitir)',
     enterNumber: '(Ingresa un número - o omite)',
     canSkip: '(Puedes omitir esto si prefieres)',

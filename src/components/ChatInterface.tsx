@@ -5,6 +5,13 @@ import { resources } from '../data/resources'
 import { consentInfo } from '../data/consent'
 import { classifyAllResources } from '../utils/eligibility'
 import { saveSession, loadSession, clearSession, saveConsent, hasConsent } from '../utils/session'
+import { 
+  getNextQuestionId, 
+  getQuestionById, 
+  getQuestionIndex, 
+  isQuestionFlowComplete,
+  getEligibleQuestions
+} from '../utils/questionFlow'
 import { useLanguage } from '../i18n/LanguageContext'
 import MessageBubble from './MessageBubble'
 import ResourcesDisplay from './ResourcesDisplay'
@@ -31,7 +38,7 @@ function detectDistress(text: string): boolean {
 export default function ChatInterface() {
   const { t, format } = useLanguage()
   const [messages, setMessages] = useState<Message[]>([])
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const [currentQuestionId, setCurrentQuestionId] = useState<string>('initial')
   const [responses, setResponses] = useState<UserResponse>({})
   const [inputValue, setInputValue] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
@@ -47,21 +54,34 @@ export default function ChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // Get current question
+  const currentQuestion = getQuestionById(questionFlow, currentQuestionId)
+  const currentQuestionIndex = getQuestionIndex(questionFlow, currentQuestionId)
+
   // Load session on mount
   useEffect(() => {
     const session = loadSession()
     if (session && session.consentGiven) {
       setMessages(session.messages)
       setResponses(session.responses)
-      setCurrentQuestionIndex(session.currentQuestionIndex)
-      if (session.currentQuestionIndex >= questionFlow.length) {
+      
+      // Convert legacy index-based sessions to ID-based
+      if (typeof session.currentQuestionIndex === 'number') {
+        const legacyQuestion = questionFlow[session.currentQuestionIndex]
+        if (legacyQuestion) {
+          setCurrentQuestionId(legacyQuestion.id)
+        }
+      }
+      
+      // Check if we should show resources or continue with questions
+      if (isQuestionFlowComplete(questionFlow, session.responses, currentQuestionId)) {
         setShowResources(true)
       } else {
         // Continue from where they left off
-        // Only ask the question if they haven't answered it yet
-        const currentQuestion = questionFlow[session.currentQuestionIndex]
-        if (currentQuestion && !session.responses[currentQuestion.field]) {
-          askQuestion(session.currentQuestionIndex, false)
+        const nextQuestionId = getNextQuestionId(questionFlow, session.responses)
+        if (nextQuestionId) {
+          setCurrentQuestionId(nextQuestionId)
+          askQuestionById(nextQuestionId, false)
         }
       }
     } else {
@@ -73,9 +93,11 @@ export default function ChatInterface() {
   // Save session whenever responses or progress changes
   useEffect(() => {
     if (hasConsent() && messages.length > 0) {
-      saveSession(responses, currentQuestionIndex, messages)
+      // Convert questionId back to index for legacy session format
+      const questionIndex = getQuestionIndex(questionFlow, currentQuestionId)
+      saveSession(responses, questionIndex, messages)
     }
-  }, [responses, currentQuestionIndex, messages])
+  }, [responses, currentQuestionId, messages])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -147,14 +169,13 @@ export default function ChatInterface() {
     }
   }
 
-  const askQuestion = (index: number, showContext = true) => {
-    if (index >= questionFlow.length) {
+  const askQuestionById = (questionId: string, showContext = true) => {
+    const question = getQuestionById(questionFlow, questionId)
+    if (!question) {
       showEligibleResources()
       return
     }
 
-    const question = questionFlow[index]
-    
     // Check if this question is already in the messages to prevent duplicates
     setMessages((prev: Message[]) => {
       const questionExists = prev.some(
@@ -208,7 +229,6 @@ export default function ChatInterface() {
     setMessages((prev: Message[]) => [...prev, userMessage])
     setIsProcessing(true)
 
-    const currentQuestion = questionFlow[currentQuestionIndex]
     if (currentQuestion) {
       setResponses((prev: UserResponse) => ({
         ...prev,
@@ -275,7 +295,6 @@ export default function ChatInterface() {
   const handleSkip = () => {
     if (isProcessing || isPaused) return
 
-    const currentQuestion = questionFlow[currentQuestionIndex]
     if (!currentQuestion?.skippable) return
 
     const skipMessage: Message = {
@@ -299,11 +318,12 @@ export default function ChatInterface() {
   }
 
   const processNextStep = () => {
-    if (currentQuestionIndex < questionFlow.length - 1) {
-      const nextIndex = currentQuestionIndex + 1
-      setCurrentQuestionIndex(nextIndex)
+    const nextQuestionId = getNextQuestionId(questionFlow, responses, currentQuestionId)
+    
+    if (nextQuestionId) {
+      setCurrentQuestionId(nextQuestionId)
       setIsProcessing(false)
-      askQuestion(nextIndex)
+      askQuestionById(nextQuestionId)
     } else {
       showEligibleResources()
     }
@@ -384,10 +404,10 @@ export default function ChatInterface() {
 
   const handleEditQuestion = (index: number) => {
     setEditMode(true)
-    setCurrentQuestionIndex(index)
+    const question = questionFlow[index]
+    setCurrentQuestionId(question.id)
     
     // Remove messages after this question
-    const question = questionFlow[index]
     
     // Find where this question was asked
     const questionMessageIndex = messages.findIndex(
@@ -411,7 +431,7 @@ export default function ChatInterface() {
       })
       
       setShowResources(false)
-      askQuestion(index, true)
+      askQuestionById(question.id, true)
     }
   }
 
@@ -420,14 +440,12 @@ export default function ChatInterface() {
       clearSession()
       setMessages([])
       setResponses({})
-      setCurrentQuestionIndex(0)
+      setCurrentQuestionId('initial')
       setShowResources(false)
       setEditMode(false)
       initializeChat()
     }
   }
-
-  const currentQuestion = questionFlow[currentQuestionIndex]
 
   return (
     <div className="chat-interface">
@@ -496,7 +514,7 @@ export default function ChatInterface() {
       </div>
 
       <ProgressIndicator
-        questions={questionFlow}
+        questions={getEligibleQuestions(questionFlow, responses)}
         currentIndex={currentQuestionIndex}
         responses={responses}
         onQuestionClick={editMode ? handleEditQuestion : undefined}
@@ -572,6 +590,42 @@ export default function ChatInterface() {
                   {currentQuestion.type === 'number' && t('enterNumber')}
                   {currentQuestion.skippable && currentQuestion.type === 'text' && t('canSkip')}
                 </div>
+                {/* Show Yes/No buttons for yesno questions */}
+                {currentQuestion.type === 'yesno' && (
+                  <div className="quick-responses-row">
+                    <button
+                      key="yes"
+                      type="button"
+                      className="quick-response-button"
+                      disabled={isProcessing}
+                      onClick={() => handleOptionSelect('Yes')}
+                    >
+                      {t('yes') || 'Yes'}
+                    </button>
+                    <button
+                      key="no"
+                      type="button"
+                      className="quick-response-button"
+                      disabled={isProcessing}
+                      onClick={() => handleOptionSelect('No')}
+                    >
+                      {t('no') || 'No'}
+                    </button>
+                    {currentQuestion.skippable && (
+                      <button
+                        key="skip-yesno"
+                        type="button"
+                        className="quick-response-button skip-button"
+                        disabled={isProcessing}
+                        onClick={handleSkip}
+                      >
+                        {t('skip')}
+                      </button>
+                    )}
+                  </div>
+                )}
+                {/* Show text input for non-yesno questions */}
+                {currentQuestion.type !== 'yesno' && (
                 <div className="input-wrapper">
                   <input
                     ref={inputRef}
@@ -602,7 +656,9 @@ export default function ChatInterface() {
                     </button>
                   )}
                 </div>
-                {Array.isArray(currentQuestion.suggestedResponses) && currentQuestion.suggestedResponses.length > 0 && (
+                )}
+                {/* Show suggested responses for text questions */}
+                {currentQuestion.type !== 'yesno' && Array.isArray(currentQuestion.suggestedResponses) && currentQuestion.suggestedResponses.length > 0 && (
                   <div className="quick-responses-row">
                     {currentQuestion.suggestedResponses.map((response) => (
                       <button
@@ -629,7 +685,7 @@ export default function ChatInterface() {
               <button 
                 onClick={() => {
                   setShowResources(false)
-                  setCurrentQuestionIndex(0)
+                  setCurrentQuestionId('initial')
                   setEditMode(true)
                 }}
                 className="edit-answers-button"

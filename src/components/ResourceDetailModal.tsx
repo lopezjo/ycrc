@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Resource, ResourceQuestion, UserResponse } from '../types'
+import { Resource, UserResponse } from '../types'
 import { useLanguage } from '../i18n/LanguageContext'
 import { findResourcesForBarriers } from '../utils/barrierResources'
 import ResourceCard from './ResourceCard'
@@ -211,10 +211,15 @@ export default function ResourceDetailModal({ resource, onClose, onAssessmentCom
 
             <div className="resource-contact-info">
               <h3>{language === 'es' ? 'Información de Contacto' : 'Contact Information'}</h3>
-              {resource.contact.phone && (
+              {resource.contact.phone && resource.contact.phone.length > 0 && (
                 <p>
                   <strong>{t('phone')}</strong>{' '}
-                  <a href={`tel:${resource.contact.phone}`}>{resource.contact.phone}</a>
+                  {resource.contact.phone.map((phone, index) => (
+                    <span key={index}>
+                      <a href={`tel:${phone}`}>{phone}</a>
+                      {index < resource.contact.phone!.length - 1 && ', '}
+                    </span>
+                  ))}
                 </p>
               )}
               {resource.contact.email && (
@@ -287,10 +292,15 @@ export default function ResourceDetailModal({ resource, onClose, onAssessmentCom
 
             <div className="resource-contact-info">
               <h3>{language === 'es' ? 'Información de Contacto' : 'Contact Information'}</h3>
-              {resource.contact.phone && (
+              {resource.contact.phone && resource.contact.phone.length > 0 && (
                 <p>
                   <strong>{t('phone')}</strong>{' '}
-                  <a href={`tel:${resource.contact.phone}`}>{resource.contact.phone}</a>
+                  {resource.contact.phone.map((phone, index) => (
+                    <span key={index}>
+                      <a href={`tel:${phone}`}>{phone}</a>
+                      {index < resource.contact.phone!.length - 1 && ', '}
+                    </span>
+                  ))}
                 </p>
               )}
               {resource.contact.email && (

@@ -8,6 +8,12 @@ export interface Message {
   editable?: boolean
 }
 
+export interface QuestionCondition {
+  field: string
+  operator: 'equals' | 'not_equals' | 'includes' | 'greater_than' | 'less_than'
+  value: any
+}
+
 export interface Question {
   id: string
   text: string
@@ -20,6 +26,8 @@ export interface Question {
   sensitive?: boolean
   youthFriendly?: string
   suggestedResponses?: string[] // Added for quick response buttons
+  showIf?: QuestionCondition[] // Conditions to show this question
+  skipIf?: QuestionCondition[] // Conditions to skip this question
 }
 
 export interface EligibilityCriteria {
@@ -46,10 +54,10 @@ export interface Resource {
   id: string
   name: string
   description: string
-  category: string
+  category: string[] // Changed to array
   eligibility: EligibilityCriteria
   contact: {
-    phone?: string
+    phone?: string[] // Changed to array
     email?: string
     website?: string
     address?: string

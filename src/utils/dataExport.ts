@@ -1,5 +1,4 @@
 import { UserResponse, Resource } from '../types'
-import { questionFlow } from '../data/questions'
 
 export interface ProviderDataExport {
   // Metadata
@@ -36,9 +35,9 @@ export interface ProviderDataExport {
   selectedResources?: Array<{
     resourceId: string
     resourceName: string
-    category: string
+    category: string[] // Changed to array
     contact: {
-      phone?: string
+      phone?: string[] // Changed to array
       email?: string
       address?: string
     }
@@ -86,9 +85,9 @@ export function generateProviderExport(
     exportData.selectedResources = selectedResources.map(resource => ({
       resourceId: resource.id,
       resourceName: resource.name,
-      category: resource.category,
+      category: resource.category, // Now an array
       contact: {
-        phone: resource.contact.phone,
+        phone: resource.contact.phone, // Now an array
         email: resource.contact.email,
         address: resource.contact.address
       }
