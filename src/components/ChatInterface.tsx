@@ -41,8 +41,31 @@ export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([])
   const [currentQuestionId, setCurrentQuestionId] = useState<string>('initial')
   const [responses, setResponses] = useState<UserResponse>({})
+  const [answerCache, setAnswerCache] = useState<UserResponse>({}) // Cache of ALL answers ever given
   const [inputValue, setInputValue] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
+  
+  // Note: answerCache contains all answers ever given, even to questions that are no longer eligible
+  // For now it's write-only, will be used later for restoration
+  useEffect(() => {
+    // Temporary: Log cache size to avoid unused variable warning
+    console.debug(`Answer cache contains ${Object.keys(answerCache).length} responses`)
+  }, [answerCache])
+
+  // Utility function to clean responses - only keep answers for currently eligible questions
+  const cleanResponses = (responses: UserResponse): UserResponse => {
+    const eligibleQuestions = getEligibleQuestions(questionFlow, responses)
+    const eligibleFields = new Set(eligibleQuestions.map(q => q.field))
+    
+    const cleanedResponses: UserResponse = {}
+    Object.keys(responses).forEach(field => {
+      if (eligibleFields.has(field)) {
+        cleanedResponses[field] = responses[field]
+      }
+    })
+    
+    return cleanedResponses
+  }
   const [showResources, setShowResources] = useState(false)
   const [showConsent, setShowConsent] = useState(false)
   const [showSupport, setShowSupport] = useState(false)
@@ -70,7 +93,7 @@ export default function ChatInterface() {
     const session = loadSession()
     if (session && session.consentGiven) {
       setMessages(session.messages)
-      setResponses(session.responses)
+      setResponses(cleanResponses(session.responses))
       
       // Determine the current question ID
       let currentQuestionIdFromSession = 'initial'
@@ -256,7 +279,12 @@ export default function ChatInterface() {
         responseValue = getPrimarySituation(option)  // Normalize situation responses
       }
         
-      setResponses((prev: UserResponse) => ({
+      // Update both the cleaned responses and the full answer cache
+      setResponses(cleanResponses({
+        ...responses,
+        [currentQuestion.field]: responseValue
+      }))
+      setAnswerCache((prev: UserResponse) => ({
         ...prev,
         [currentQuestion.field]: responseValue
       }))
@@ -302,8 +330,14 @@ export default function ChatInterface() {
         // Normalize situation responses to standard categories
         responseValue = getPrimarySituation(responseText)
       }
-      const updated = { ...responses, [currentQuestion.field]: responseValue }
+      const updated = cleanResponses({ ...responses, [currentQuestion.field]: responseValue })
       setResponses(updated)
+      
+      // Update the answer cache with the latest response
+      setAnswerCache((prev: UserResponse) => ({
+        ...prev,
+        [currentQuestion.field]: responseValue
+      }))
       
       if (editMode) {
         // In edit mode, just update the response and show results
@@ -430,11 +464,9 @@ export default function ChatInterface() {
       setMessages((prev: Message[]) => prev.slice(0, sliceIndex))
       
       // Remove response ONLY for this specific question being edited
-      setResponses((prev: UserResponse) => {
-        const updated = { ...prev }
-        delete updated[question.field]
-        return updated
-      })
+      setResponses(cleanResponses(Object.fromEntries(
+        Object.entries(responses).filter(([key]) => key !== question.field)
+      )))
       
       setShowResources(false)
       askQuestionById(question.id, true)
@@ -446,6 +478,7 @@ export default function ChatInterface() {
       clearSession()
       setMessages([])
       setResponses({})
+      setAnswerCache({}) // Clear the answer cache too
       setCurrentQuestionId('initial')
       setShowResources(false)
       setEditMode(false)
@@ -491,6 +524,13 @@ export default function ChatInterface() {
             title={t('edit')}
           >
             {editMode ? t('exitEdit') : t('edit')}
+          </button>
+          <button 
+            onClick={() => setShowExport(true)}
+            className="header-button export-button"
+            title={t('exportData') || 'Export Data'}
+          >
+            📤 {t('exportData') || 'Export Data'}
           </button>
           <button 
             onClick={handleClearData} 
@@ -666,24 +706,6 @@ export default function ChatInterface() {
         {showResources && (
           <div className="resources-complete">
             <p>{t('resourcesComplete')}</p>
-            <div className="resources-actions">
-              <button 
-                onClick={() => {
-                  setShowResources(false)
-                  setCurrentQuestionId('initial')
-                  setEditMode(true)
-                }}
-                className="edit-answers-button"
-              >
-                {t('editAnswers')}
-              </button>
-              <button 
-                onClick={() => setShowExport(true)}
-                className="export-data-button"
-              >
-                📤 {t('exportData') || 'Export Data'}
-              </button>
-            </div>
           </div>
         )}
       </div>

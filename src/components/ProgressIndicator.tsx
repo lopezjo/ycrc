@@ -18,7 +18,9 @@ export default function ProgressIndicator({
   editable = false
 }: ProgressIndicatorProps) {
   const { t, format } = useLanguage()
-  const progress = ((currentIndex + 1) / questions.length) * 100
+  const answeredCount = Object.keys(responses).length
+  const currentQuestionNumber = answeredCount + 1
+  const progress = (currentQuestionNumber / questions.length) * 100
 
   return (
     <div className="progress-container">
@@ -29,7 +31,7 @@ export default function ProgressIndicator({
         />
       </div>
       <div className="progress-text">
-        {format('questionOf', { current: currentIndex + 1, total: questions.length })}
+        {format('questionOf', { current: currentQuestionNumber, total: questions.length })}
       </div>
       {editable && (
         <div className="progress-edit-hint">
