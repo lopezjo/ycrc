@@ -102,7 +102,7 @@ export const resources: Resource[] = [
     },
     hours: 'Mon-Fri 9am-5pm, After hours intake available',
     whatItOffers: [
-      'Short term shelter'
+      'Short term shelter',
       'Crisis counseling',
       'Family mediation',
       'Referrals'
@@ -496,6 +496,7 @@ export const resources: Resource[] = [
     priority: 'high'
   }
 ]
+
 
 
 
