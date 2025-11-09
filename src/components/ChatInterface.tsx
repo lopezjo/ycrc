@@ -12,6 +12,7 @@ import {
   isQuestionFlowComplete,
   getEligibleQuestions
 } from '../utils/questionFlow'
+import { getPrimarySituation } from '../utils/situationMapping'
 import { useLanguage } from '../i18n/LanguageContext'
 import MessageBubble from './MessageBubble'
 import ResourcesDisplay from './ResourcesDisplay'
@@ -229,9 +230,13 @@ export default function ChatInterface() {
     setIsProcessing(true)
 
     if (currentQuestion) {
+      const responseValue = currentQuestion.field === 'situation' 
+        ? getPrimarySituation(option)  // Normalize situation responses
+        : option
+        
       setResponses((prev: UserResponse) => ({
         ...prev,
-        [currentQuestion.field]: option
+        [currentQuestion.field]: responseValue
       }))
     }
 
@@ -271,6 +276,9 @@ export default function ChatInterface() {
         responseValue = parseInt(responseText) || 0
       } else if (currentQuestion.type === 'yesno') {
         responseValue = /^(yes|y|true|1)$/i.test(responseText)
+      } else if (currentQuestion.field === 'situation') {
+        // Normalize situation responses to standard categories
+        responseValue = getPrimarySituation(responseText)
       }
       const updated = { ...responses, [currentQuestion.field]: responseValue }
       setResponses(updated)

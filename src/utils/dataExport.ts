@@ -1,4 +1,5 @@
 import { UserResponse, Resource } from '../types'
+import { findResourcesForBarriers } from './barrierResources'
 
 export interface ProviderDataExport {
   // Metadata
@@ -26,6 +27,11 @@ export interface ProviderDataExport {
     [resourceId: string]: {
       resourceName: string
       barriers?: string[]
+      helpfulResources?: Array<{
+        resourceId: string
+        resourceName: string
+        recommendedFor: string[] // What barriers this resource helps with
+      }>
       responses: { [questionId: string]: any }
       assessedDate: string
     }
@@ -99,9 +105,35 @@ export function generateProviderExport(
     exportData.resourceAssessments = {}
     Object.keys(resourceAssessments).forEach(resourceId => {
       const resource = selectedResources?.find(r => r.id === resourceId)
-      if (resource) {
+      if (resource && resource.followUpQuestions) {
+        // Identify barriers from the assessment responses
+        const identifiedBarriers = resource.followUpQuestions
+          .filter(q => {
+            const response = resourceAssessments[resourceId][q.field]
+            // If it's a yes/no question and they answered "no", it's a barrier
+            if (q.type === 'yesno' && response === false) return true
+            // If it's multiple choice and they selected something indicating a barrier
+            if (q.type === 'multiple' && response && typeof response === 'string') {
+              const barrierIndicators = ['emergency', 'urgent', 'no', 'cannot', "don't"]
+              return barrierIndicators.some(indicator => response.toLowerCase().includes(indicator))
+            }
+            return false
+          })
+          .map(q => q.barrier || q.text)
+
+        // Find helpful resources for the identified barriers
+        const helpfulResources = identifiedBarriers.length > 0 
+          ? findResourcesForBarriers(identifiedBarriers, resourceId, responses)
+          : []
+
         exportData.resourceAssessments![resourceId] = {
           resourceName: resource.name,
+          barriers: identifiedBarriers.length > 0 ? identifiedBarriers : undefined,
+          helpfulResources: helpfulResources.length > 0 ? helpfulResources.map(hr => ({
+            resourceId: hr.id,
+            resourceName: hr.name,
+            recommendedFor: identifiedBarriers // All barriers this resource was recommended for
+          })) : undefined,
           responses: resourceAssessments[resourceId],
           assessedDate: new Date().toISOString()
         }

@@ -13,8 +13,8 @@ function getQuestionFlow(): Question[] {
       context: t.questions.initial.context,
       youthFriendly: t.questions.initial.youthFriendly,
       field: 'situation',
-      type: 'multiple',
-      options: t.questions.initial.options,
+      type: 'text',
+      suggestedResponses: t.questions.initial.options,
       required: false,
       skippable: true,
       sensitive: true

@@ -164,7 +164,8 @@ export const resources: Resource[] = [
     description: ' Offers food, clothing, hygiene items, and referrals to community resources for youth experiencing homelessness.',
     category: ['Food', 'clothing', 'Hygiene', 'Case Management'],
     eligibility: {
-      age: {min:0, max:1000 }
+      age: {min:0, max:1000 },
+      situation: ['homeless']
     },
     contact: {
       phone: ['(415) 487-0691,  (415) 273-9824'],

@@ -1,4 +1,5 @@
 import { Resource, UserResponse, EligibilityResult } from '../types'
+import { doesSituationMatch } from './situationMapping'
 
 export function checkEligibility(resource: Resource, responses: UserResponse): boolean {
   const result = checkEligibilityDetailed(resource, responses)
@@ -40,21 +41,14 @@ export function checkEligibilityDetailed(resource: Resource, responses: UserResp
     }
   }
 
-  // Check situation - more flexible matching
+  // Check situation - enhanced matching using situation mapping
   if (criteria.situation && criteria.situation.length > 0) {
     const userSituation = String(responses.situation || '').toLowerCase()
     if (!userSituation) {
       missingInfo.push('situation')
     } else {
-      const matches = criteria.situation.some(sit => {
-        const sitLower = sit.toLowerCase()
-        // Direct match
-        if (userSituation.includes(sitLower)) return true
-        // Related terms
-        if (sitLower === 'car' && (userSituation.includes('vehicle') || userSituation.includes('sleeping in'))) return true
-        if (sitLower === 'homeless' && (userSituation.includes('no place') || userSituation.includes('nowhere') || userSituation.includes('couch'))) return true
-        if (sitLower === 'at-risk' && (userSituation.includes('unsafe') || userSituation.includes('dangerous'))) return true
-        return false
+      const matches = criteria.situation.some(requiredSituation => {
+        return doesSituationMatch(userSituation, requiredSituation)
       })
       if (!matches) {
         reasons.push(`This program is for people who are: ${criteria.situation.join(' or ')}`)

@@ -7,17 +7,15 @@ import { UserResponse } from '../types'
  * Maps barriers to resource categories/IDs that can help
  */
 const barrierResourceMap: { [key: string]: string[] } = {
-  'Transportation': ['transport-1', 'multi-1'],
-  'transportation to the shelter': ['transport-1', 'multi-1'],
-  'transportation to food bank': ['transport-1', 'multi-1'],
-  'transportation to center': ['transport-1', 'multi-1'],
-  'Documentation requirements': ['id-1', 'multi-1'],
-  'Documentation': ['id-1', 'multi-1'],
-  'Curfew requirements': ['multi-1', 'crisis-1'],
-  'Food storage': ['food-2', 'multi-1'],
-  'Availability during center hours': ['crisis-1', 'multi-1'],
-  'Timing/urgency': ['crisis-1', 'transport-1'],
-  'Type of transportation need': ['transport-1']
+  'Transportation': ['shelter-2-verif'], // NORTHERN CALIFORNIA FAMILY CENTER offers transportation assistance
+  'transportation to the shelter': ['shelter-2-verif'],
+  'transportation to food bank': ['shelter-2-verif'],
+  'transportation to center': ['shelter-2-verif'],
+  'Documentation requirements': ['food-1-verif'], // AT THE CROSSROADS has "No ID required" 
+  'Documentation': ['food-1-verif'],
+  'Identication requirements': ['food-1-verif'],
+  'Limited space': ['shelter-2-verif', 'shelter-3-verif', 'shelter-4-verif'], // Alternative shelters
+  'Limited Space': ['shelter-2-verif', 'shelter-3-verif', 'shelter-4-verif']
 }
 
 /**
@@ -48,26 +46,19 @@ export function findResourcesForBarriers(
 
     // Check for transportation-related barriers
     if (normalizedBarrier.includes('transport') || normalizedBarrier.includes('get to') || normalizedBarrier.includes('way to')) {
-      resourceIds.add('transport-1')
-      resourceIds.add('multi-1')
+      resourceIds.add('shelter-2-verif') // NORTHERN CALIFORNIA FAMILY CENTER
     }
 
-    // Check for documentation/ID barriers
+    // Check for documentation/ID barriers  
     if (normalizedBarrier.includes('documentation') || normalizedBarrier.includes('id') || normalizedBarrier.includes('identification')) {
-      resourceIds.add('id-1')
-      resourceIds.add('multi-1')
+      resourceIds.add('food-1-verif') // AT THE CROSSROADS (No ID required)
     }
 
-    // Check for food-related barriers
-    if (normalizedBarrier.includes('food') || normalizedBarrier.includes('storage')) {
-      resourceIds.add('food-2')
-      resourceIds.add('multi-1')
-    }
-
-    // Check for time/availability barriers
-    if (normalizedBarrier.includes('curfew') || normalizedBarrier.includes('hours') || normalizedBarrier.includes('time') || normalizedBarrier.includes('available')) {
-      resourceIds.add('multi-1')
-      resourceIds.add('crisis-1')
+    // Check for space/capacity barriers
+    if (normalizedBarrier.includes('space') || normalizedBarrier.includes('capacity') || normalizedBarrier.includes('full')) {
+      resourceIds.add('shelter-2-verif') // NORTHERN CALIFORNIA FAMILY CENTER
+      resourceIds.add('shelter-3-verif') // BILL WILSON CENTER  
+      resourceIds.add('shelter-4-verif') // LARKIN STREET YOUTH SERVICES
     }
   })
 
@@ -76,8 +67,12 @@ export function findResourcesForBarriers(
     const resource = resources.find(r => r.id === id)
     if (resource) {
       const eligibility = checkEligibilityDetailed(resource, userResponses)
-      // Include if eligible or potentially eligible (missing info only, no hard disqualifiers)
-      if (eligibility.eligible || (eligibility.missingInfo && eligibility.missingInfo.length > 0 && !eligibility.reasons)) {
+      // Be more permissive for barrier resources - include if eligible, potentially eligible, 
+      // or if the only barrier is age/duration (since barrier resources might still be helpful)
+      if (eligibility.eligible || 
+          (eligibility.missingInfo && eligibility.missingInfo.length > 0) ||
+          (eligibility.reasons && eligibility.reasons.length === 1 && 
+           (eligibility.reasons[0].includes('age') || eligibility.reasons[0].includes('duration')))) {
         helpfulResources.push(resource)
       }
     }
