@@ -535,12 +535,10 @@ export default function ChatInterface() {
   }
 
   const handleEditQuestion = (index: number) => {
-    console.debug(`handleEditQuestion called with index: ${index}`)
     setEditMode(true)
     // Get the question from the eligible questions list (not the full questionFlow)
     const eligibleQuestions = getEligibleQuestions(questionFlow, responses)
     const question = eligibleQuestions[index]
-    console.debug(`Editing question: ${question?.field} (${question?.text})`)
     setCurrentQuestionId(question.id)
     
     // Find the original position of this question in the question flow
@@ -560,9 +558,6 @@ export default function ChatInterface() {
       const sliceIndex = hasContext ? questionMessageIndex - 1 : questionMessageIndex
       setMessages((prev: Message[]) => prev.slice(0, sliceIndex))
       
-      console.log(`Before edit - responses:`, responses)
-      console.log(`Eligible questions before edit:`, getEligibleQuestions(questionFlow, responses).map(q => q.field))
-      
       // Remove responses for questions that come after this one in the flow (keep current question)
       const questionsToKeep = questionFlow.slice(0, originalQuestionIndex + 1)
       const fieldsToKeep = questionsToKeep.map(q => q.field)
@@ -571,16 +566,12 @@ export default function ChatInterface() {
         Object.entries(responses).filter(([key]) => fieldsToKeep.includes(key))
       )
       
-      console.log(`After filtering - responses:`, filteredResponses)
-      console.log(`Eligible questions after filtering:`, getEligibleQuestions(questionFlow, filteredResponses).map(q => q.field))
-      
       // Update only the responses (cache keeps ALL historical answers)
       setResponses(cleanResponses(filteredResponses))
       
       // Note: answerCache is NOT modified here - it preserves all historical answers
       
       setShowResources(false)
-      console.log(`About to call askQuestionById for edit: questionId=${question.id}, isManualEdit=true`)
       askQuestionById(question.id, true, true) // Pass true for isManualEdit
     }
   }
