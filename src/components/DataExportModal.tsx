@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { UserResponse, Resource } from '../types'
 import { useLanguage } from '../i18n/LanguageContext'
 import { generateProviderExport, downloadJSON, generateHMISFormat, ProviderDataExport } from '../utils/dataExport'
+import { getUserId } from '../utils/session'
 import './DataExportModal.css'
 
 interface DataExportModalProps {
@@ -65,6 +66,15 @@ export default function DataExportModal({
             : 'You can export your information in a format that resource providers can use. This helps you avoid filling out the same forms multiple times.'
           }
         </p>
+        
+        <div className="privacy-note">
+          <p style={{ fontSize: '0.9em', color: '#666', marginBottom: '15px' }}>
+            {language === 'es' 
+              ? `📋 Se incluye un identificador único anónimo para hacer seguimiento de tu progreso sin almacenar información personal. ID: ${getUserId().substring(0, 12)}...`
+              : `📋 A unique anonymous identifier is included to track your progress without storing personal information. ID: ${getUserId().substring(0, 12)}...`
+            }
+          </p>
+        </div>
 
         <div className="export-options">
           <div className="option-group">
