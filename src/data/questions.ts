@@ -26,8 +26,8 @@ function getQuestionFlow(): Question[] {
       youthFriendly: t.questions.age.youthFriendly,
       field: 'age',
       type: 'number',
-      required: true,
-      skippable: false
+      required: false,
+      skippable: true
     },
     
     // Housing-specific questions
