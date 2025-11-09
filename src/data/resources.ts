@@ -2,100 +2,216 @@ import { Resource } from '../types'
 
 export const resources: Resource[] = [
   {
-    id: 'shelter-1',
-    name: 'Youth Emergency Shelter',
-    description: '24/7 emergency shelter for youth ages 16-24',
-    category: ['Housing'],
+    id: 'shelter-1-verified',
+    name: 'HUCKLEBERRY HOUSE CRISIS SHELTER',
+    description: 'Provides emergency shelter for runaway youth and youth experiencing homelessness. \nOffers case management, crisis intervention, and resolution services.',
+    category: ['Housing', 'Crisis Support'],
     eligibility: {
-      age: { min: 16, max: 24 },
-      situation: ['homeless', 'at-risk']
+      age: { min: 12, max: 18 },
+      situation: ['homeless']
     },
     contact: {
-      phone: ['(555) 123-4567'],
-      address: '123 Main Street, City, State'
+      phone: ['(415) 621-2929', '(415) 668-2622', 'TTY: (800) 735-2929'],
+      address: '1292 Page Street San Francisco, CA 94117'
     },
-    hours: '24/7',
-    notes: 'Walk-ins welcome. Provides meals and basic necessities.',
+    hours: '24/7 for immediate needs and intake support. Mon-Fri 8am - 5pm',
+    notes: 'Call for appointment. Provides meals and basic necessities.',
     whatItOffers: [
       'Safe place to sleep',
       'Three meals a day',
       'Showers and laundry facilities',
       'Basic hygiene supplies',
       'Case management support',
-      'Help finding permanent housing'
+      'Spanish language services available',
+      'No ID required for intake'
     ],
     commonBarriers: [
       'Transportation to the shelter',
-      'Limited space (first come, first served)',
-      'Curfew requirements',
-      'Need for ID or documentation'
+      'Limited space'
     ],
     followUpQuestions: [
       {
         id: 'transport-barrier',
         text: 'Do you have a way to get to the shelter? (Bus, ride, walking distance, etc.)',
-        context: 'Some shelters are in specific locations. Knowing how you\'d get there helps us figure out if this is realistic for you right now.',
+        context: 'Knowing how you\'d get there helps us connect you to other resources, or determine if this is realistic for you right now.',
         field: 'transportToShelter',
         type: 'yesno',
         barrier: 'Transportation'
       },
       {
-        id: 'curfew-barrier',
-        text: 'Can you be at the shelter by their curfew time? (Usually around 8-9pm)',
-        context: 'Most shelters have curfews to keep everyone safe. If you work late or have other commitments, this might be a challenge.',
-        field: 'canMeetCurfew',
+        id: 'space-barrier',
+        text: 'The shelter can tell you if they have space when you call. Do you want to check if there is space available?',
+        context: 'Huckleberry house may have limited beds. If there is no space, we can look for other options.',
+        field: 'hasSpaceAtShelter',
         type: 'yesno',
-        barrier: 'Curfew requirements'
-      },
-      {
-        id: 'documentation-barrier',
-        text: 'Do you have any ID or documentation? (Even a school ID or birth certificate helps)',
-        context: 'Some shelters need to see ID to check you in. But many will work with you even if you don\'t have it yet.',
-        field: 'hasDocumentation',
-        type: 'yesno',
-        barrier: 'Documentation requirements'
+        barrier: 'Limited Space'
       }
     ]
   },
   {
-    id: 'shelter-2',
-    name: 'Transitional Living Program',
-    description: 'Long-term housing support for youth 18-21',
-    category: ['Housing'],
+    id: 'shelter-2-verif',
+    name: 'NORTHERN CALIFORNIA FAMILY CENTER',
+    description: 'Short term shelter options for runaway and homeless youth, crisis counseling, family mediation, transportation, referrals, and housing in foster homes',
+    category: ['Housing', 'Crisis Support', 'Family Services', 'Transportation', 'Case Management'],
     eligibility: {
-      age: { min: 18, max: 21 },
+      age: { min: 0, max: 17 },
+      duration: 'short-term'
+    },
+    contact: {
+      phone: ['(800) 718-4357', '(925) 370-1990'],
+      address: '2244 Pacheco Boulevard Martinez, CA 94553',
+      website: 'https://ncfc.us'
+    },
+    hours: '24/7',
+    whatItOffers: [
+      'Short term shelter',
+      'Immediate foster home services',
+      'Crisis counseling',
+      'Family mediation',
+      'Case management support',
+      'transportation assistance',
+      'Referrals'
+    ],
+    commonBarriers: [
+      'Transportation to the shelter'
+    ],
+    followUpQuestions: [
+      {
+        id: 'transport-barrier',
+        text: 'Do you have a way to get to the shelter? (Bus, ride, walking distance, etc.)',
+        context: 'The shelter offers transportation assistance. If you can\'t get there, we can help arrange a ride.',
+        field: 'transportToShelter',
+        type: 'yesno',
+        barrier: 'Transportation'
+      }
+    ]
+  },
+  {
+    id: 'shelter-3-verif',
+    name: 'BILL WILSON CENTER',
+    description: 'Provides short-term shelter for homeless and runaway youth. Offers intensive individual, group and family counseling. Helps reunite families, prevent future problems and stabilize the lives of youth.',
+    category: ['Housing', 'Individual counseling', 'Family Services'],
+    eligibility: {
+      age: { min: 12, max: 17 },
+      duration: 'short-term'
+    },
+    contact: {
+      phone: ['Intake (After Hours): (408) 850-6164', 'Intake (Monday-Friday 9am-5pm): (408) 243-0222'],
+      address: '3490 The Alameda Santa Clara, CA 95050',
+      website: 'http://www.billwilsoncenter.org/'
+    },
+    hours: 'Mon-Fri 9am-5pm, After hours intake available',
+    whatItOffers: [
+      'Short term shelter'
+      'Crisis counseling',
+      'Family mediation',
+      'Referrals'
+    ],
+    commonBarriers: [
+      'Transportation to the shelter'
+    ],
+    followUpQuestions: [
+      {
+        id: 'transport-barrier',
+        text: 'Do you have a way to get to the shelter? (Bus, ride, walking distance, etc.)',
+        context: 'Knowing how you\'d get there helps us connect you to other resources, or determine if this is realistic for you right now.',
+        field: 'transportToShelter',
+        type: 'yesno',
+        barrier: 'Transportation'
+      }
+    ]
+  },
+  {
+    id: 'shelter-4-verif',
+    name: 'LARKIN STREET YOUTH SERVICES',
+    description: 'Provides emergency shelters for youth experiencing homelessness.',
+    category: ['Navigation & Youth Access Points', 'Supportive housing', 'Transitional housing', 'Rapid Rehousing Programs'],
+    eligibility: {
+      age: { min: 18, max: 27 },
       duration: 'long-term'
     },
     contact: {
-      phone: ['(555) 234-5678'],
-      email: 'tlp@example.org'
+      phone: ['1 (800) 669-6196', '1 (800) 447-8223'],
+      address: '869 Ellis Street San Francisco, CA 94109 and 536 Central Avenue San Francisco, CA 94117',
+      website: 'https://larkinstreetyouth.org'
     },
-    hours: 'Mon-Fri 9am-5pm'
+    hours: 'Mon-Fri 8am-5pm. Call for more information.',
+    whatItOffers: [
+      'Short term shelter',
+      'Long term shelter',
+      'Affordable housing options',
+      'Supportive housing',
+      'Rapid rehousing programs',
+      'Transitional housing'
+    ],
+    commonBarriers: [
+      'Transportation to the shelter'
+    ],
+    followUpQuestions: [
+      {
+        id: 'transport-barrier',
+        text: 'Do you have a way to get to the shelter? (Bus, ride, walking distance, etc.)',
+        context: 'Knowing how you\'d get there helps us connect you to other resources, or determine if this is realistic for you right now.',
+        field: 'transportToShelter',
+        type: 'yesno',
+        barrier: 'Transportation'
+      }
+    ]
   },
   {
-    id: 'food-1',
-    name: 'Youth Food Bank',
-    description: 'Free meals and groceries for youth in need',
-    category: ['Food'],
+    id: 'food-1-verif',
+    name: 'AT THE CROSSROADS (ATC)',
+    description: ' Offers food, clothing, hygiene items, and referrals to community resources for youth experiencing homelessness.',
+    category: ['Food', 'clothing', 'Hygiene', 'Case Management'],
     eligibility: {
-      age: { max: 25 }
+      age: {min:0, max:1000 }
     },
     contact: {
-      phone: ['(555) 345-6789'],
-      address: '456 Oak Avenue, City, State'
+      phone: ['(415) 487-0691,  (415) 273-9824'],
+      address: '167 Jessie Street San Francisco, CA 94105',
+      website: 'https://atthecrossroads.org'
     },
-    hours: 'Mon-Sat 10am-6pm'
+    hours: 'Mon-Fri 11am-6pm',
+    whatItOffers: [
+      'Food',
+      'Clothing',
+      'Hygiene items',
+      'Referrals'
+    ],
+    commonBarriers: [
+      'Transportation to the shelter',
+      'Identication requirements'
+    ],
+    followUpQuestions: [
+      {
+        id: 'transport-barrier',
+        text: 'Do you have a way to get to the shelter? (Bus, ride, walking distance, etc.)',
+        context: 'Knowing how you\'d get there helps us connect you to other resources, or determine if this is realistic for you right now.',
+        field: 'transportToShelter',
+        type: 'yesno',
+        barrier: 'Transportation'
+      },
+      {
+        id: 'ID-barrier',
+        text: 'Do you have any identification? For example, a school ID, a drivers license, or a passport?',
+        context: 'This program may require identification to access certain services. If you don\'t have ID, we can look for other options that don\'t require it.',
+        field: 'identification',
+        type: 'yesno',
+        barrier: 'Transportation'
+      }
+    ]
+
   },
   {
     id: 'health-1',
     name: 'Youth Health Clinic',
     description: 'Free medical and mental health services',
-    category: ['Healthcare'],
+    category: 'Healthcare',
     eligibility: {
       age: { max: 24 }
     },
     contact: {
-      phone: ['(555) 456-7890'],
+      phone: '(555) 456-7890',
       website: 'www.youthhealth.org'
     },
     hours: 'Mon-Fri 8am-8pm'
@@ -104,12 +220,12 @@ export const resources: Resource[] = [
     id: 'education-1',
     name: 'Education Support Center',
     description: 'Help with school enrollment, GED prep, and college applications',
-    category: ['Education'],
+    category: 'Education',
     eligibility: {
       inSchool: true
     },
     contact: {
-      phone: ['(555) 567-8901'],
+      phone: '(555) 567-8901',
       email: 'education@example.org'
     },
     hours: 'Mon-Fri 9am-5pm'
@@ -118,12 +234,12 @@ export const resources: Resource[] = [
     id: 'legal-1',
     name: 'Youth Legal Aid',
     description: 'Free legal assistance for youth issues',
-    category: ['Legal'],
+    category: 'Legal',
     eligibility: {
       age: { max: 24 }
     },
     contact: {
-      phone: ['(555) 678-9012'],
+      phone: '(555) 678-9012',
       website: 'www.youthlegal.org'
     },
     hours: 'Mon-Fri 10am-4pm'
@@ -132,13 +248,13 @@ export const resources: Resource[] = [
     id: 'job-1',
     name: 'Youth Employment Program',
     description: 'Job training, placement, and career counseling',
-    category: ['Employment'],
+    category: 'Employment',
     eligibility: {
       age: { min: 16, max: 24 },
       hasIncome: false
     },
     contact: {
-      phone: ['(555) 789-0123'],
+      phone: '(555) 789-0123',
       email: 'jobs@example.org'
     },
     hours: 'Mon-Fri 9am-5pm'
@@ -147,12 +263,12 @@ export const resources: Resource[] = [
     id: 'id-1',
     name: 'ID Assistance Program',
     description: 'Help obtaining identification documents',
-    category: ['Documentation'],
+    category: 'Documentation',
     eligibility: {
       hasId: false
     },
     contact: {
-      phone: ['(555) 890-1234'],
+      phone: '(555) 890-1234',
       address: '789 Pine Street, City, State'
     },
     hours: 'Mon-Fri 10am-3pm'
@@ -161,13 +277,13 @@ export const resources: Resource[] = [
     id: 'transport-1',
     name: 'Transportation Assistance Program',
     description: 'Free bus passes, gas vouchers, and ride assistance for youth in crisis',
-    category: ['Transportation'],
+    category: 'Transportation',
     eligibility: {
       age: { max: 24 },
       situation: ['homeless', 'at-risk', 'car', 'transportation']
     },
     contact: {
-      phone: ['(555) 901-2345'],
+      phone: '(555) 901-2345',
       email: 'transport@youthservices.org'
     },
     hours: 'Mon-Fri 9am-5pm, Emergency: 24/7',
@@ -221,12 +337,12 @@ export const resources: Resource[] = [
     id: 'food-2',
     name: 'Emergency Food Assistance',
     description: 'Immediate food support - meals, groceries, and food vouchers',
-    category: ['Food'],
+    category: 'Food',
     eligibility: {
       age: { max: 25 }
     },
     contact: {
-      phone: ['(555) 012-3456'],
+      phone: '(555) 012-3456',
       address: '321 Elm Street, City, State'
     },
     hours: 'Daily 8am-8pm',
@@ -268,12 +384,12 @@ export const resources: Resource[] = [
     id: 'education-2',
     name: 'McKinney-Vento Education Rights',
     description: 'School enrollment help, transportation to school, and free school meals for homeless youth',
-    category: ['Education'],
+    category: 'Education',
     eligibility: {
       age: { max: 21 }
     },
     contact: {
-      phone: ['(555) 123-4560'],
+      phone: '(555) 123-4560',
       website: 'www.schoolsupport.org',
       email: 'mckinneyvento@schools.org'
     },
@@ -285,13 +401,13 @@ export const resources: Resource[] = [
     id: 'housing-3',
     name: 'Rapid Re-Housing for Youth',
     description: 'Quick housing placement with minimal barriers - helps with deposits and first month rent',
-    category: ['Housing'],
+    category: 'Housing',
     eligibility: {
       age: { min: 18, max: 24 },
       situation: ['homeless', 'car', 'unsheltered']
     },
     contact: {
-      phone: ['(555) 234-5671'],
+      phone: '(555) 234-5671',
       email: 'rapidrehousing@housing.org'
     },
     hours: 'Mon-Fri 9am-5pm',
@@ -302,12 +418,12 @@ export const resources: Resource[] = [
     id: 'multi-1',
     name: 'Youth Resource Center',
     description: 'One-stop center offering food, showers, laundry, case management, and resource navigation',
-    category: ['Multi-Service'],
+    category: 'Multi-Service',
     eligibility: {
       age: { max: 24 }
     },
     contact: {
-      phone: ['(555) 345-6782'],
+      phone: '(555) 345-6782',
       address: '555 Youth Way, City, State',
       website: 'www.youthresource.org'
     },
@@ -351,12 +467,12 @@ export const resources: Resource[] = [
     id: 'benefits-1',
     name: 'Benefits Navigation',
     description: 'Help applying for CalFresh (food stamps), Medi-Cal, and other benefits',
-    category: ['Benefits'],
+    category: 'Benefits',
     eligibility: {
       age: { max: 24 }
     },
     contact: {
-      phone: ['(555) 456-7893'],
+      phone: '(555) 456-7893',
       email: 'benefits@youthservices.org'
     },
     hours: 'Mon-Fri 10am-4pm',
@@ -367,46 +483,19 @@ export const resources: Resource[] = [
     id: 'crisis-1',
     name: '24/7 Youth Crisis Line',
     description: 'Immediate support, safety planning, and crisis intervention',
-    category: ['Crisis Support'],
+    category: 'Crisis Support',
     eligibility: {
       age: { max: 24 }
     },
     contact: {
-      phone: ['(555) 567-8904'],
+      phone: '(555) 567-8904',
       website: 'www.youthcrisis.org'
     },
     hours: '24/7',
     notes: 'Available anytime. Can help with immediate safety needs, emotional support, and connecting to resources.',
     priority: 'high'
-  },
-  {
-    id: 'comprehensive-center',
-    name: 'Youth Comprehensive Support Center',
-    description: 'Multi-service center providing housing assistance, food programs, and crisis support in one location',
-    category: ['Housing', 'Food', 'Crisis Support'], // Multiple categories
-    eligibility: {
-      age: { max: 24 }
-    },
-    contact: {
-      phone: ['(555) 999-1111', '(555) 999-2222'], // Multiple phone numbers - main and crisis line
-      email: 'help@youthcenter.org',
-      address: '100 Youth Support Way, City, State'
-    },
-    hours: 'Mon-Fri 8am-8pm, Crisis Line: 24/7',
-    notes: 'Comprehensive center serving multiple needs. Call main line during business hours, crisis line anytime.',
-    priority: 'high',
-    urgent: false,
-    whatItOffers: [
-      'Emergency housing assistance',
-      'Daily meals and food pantry',
-      'Crisis counseling and support',
-      'Case management services',
-      'Resource navigation and referrals'
-    ],
-    commonBarriers: [
-      'Transportation to center',
-      'May have waiting lists for some services'
-    ]
   }
 ]
+
+
 
