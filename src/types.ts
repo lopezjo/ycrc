@@ -69,6 +69,8 @@ export interface Resource {
   followUpQuestions?: ResourceQuestion[]
   whatItOffers?: string[]
   commonBarriers?: string[]
+  lgbtqAffirming?: boolean // Explicitly LGBTQ+ friendly
+  tags?: string[] // Additional tags for filtering
 }
 
 export interface EligibilityResult {

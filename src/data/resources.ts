@@ -16,6 +16,10 @@ export const resources: Resource[] = [
     },
     hours: '24/7 for immediate needs and intake support. Mon-Fri 8am - 5pm',
     notes: 'Call for appointment. Provides meals and basic necessities.',
+    urgent: true,
+    priority: 'high',
+    lgbtqAffirming: true,
+    tags: ['24/7', 'No ID Required', 'LGBTQ+ Safe'],
     whatItOffers: [
       'Safe place to sleep',
       'Three meals a day',
@@ -23,7 +27,8 @@ export const resources: Resource[] = [
       'Basic hygiene supplies',
       'Case management support',
       'Spanish language services available',
-      'No ID required for intake'
+      'No ID required for intake',
+      'LGBTQ+ affirming environment'
     ],
     commonBarriers: [
       'Transportation to the shelter',

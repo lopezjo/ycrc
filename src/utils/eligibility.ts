@@ -24,11 +24,13 @@ export function checkEligibilityDetailed(resource: Resource, responses: UserResp
   const criteria = resource.eligibility
   const reasons: string[] = []
   const missingInfo: string[] = []
+  const criticalMissingInfo: string[] = [] // Info that MUST be provided
 
-  // Check age
+  // Check age (CRITICAL for matching)
   if (criteria.age) {
     const age = Number(responses.age)
     if (isNaN(age) || !responses.age) {
+      criticalMissingInfo.push('age')
       missingInfo.push('age')
     } else {
       if (criteria.age.min !== undefined && age < criteria.age.min) {
@@ -40,13 +42,14 @@ export function checkEligibilityDetailed(resource: Resource, responses: UserResp
     }
   }
 
-  // Check location
+  // Check location (CRITICAL for matching)
   if (criteria.location && criteria.location.length > 0) {
     const userLocation = String(responses.location || '').toLowerCase()
     if (!userLocation) {
+      criticalMissingInfo.push('location')
       missingInfo.push('location')
     } else {
-      const matches = criteria.location.some(loc => 
+      const matches = criteria.location.some(loc =>
         userLocation.includes(loc.toLowerCase())
       )
       if (!matches) {
@@ -55,10 +58,11 @@ export function checkEligibilityDetailed(resource: Resource, responses: UserResp
     }
   }
 
-  // Check situation - enhanced matching using situation mapping
+  // Check situation - enhanced matching using situation mapping (CRITICAL)
   if (criteria.situation && criteria.situation.length > 0) {
     const userSituation = String(responses.situation || '').toLowerCase()
     if (!userSituation) {
+      criticalMissingInfo.push('situation')
       missingInfo.push('situation')
     } else {
       const matches = criteria.situation.some(requiredSituation => {
@@ -133,12 +137,15 @@ export function checkEligibilityDetailed(resource: Resource, responses: UserResp
     return { eligible: false, reasons, missingInfo: missingInfo.length > 0 ? missingInfo : undefined }
   }
 
-  // If we have missing info but no reasons, they might be eligible
-  if (missingInfo.length > 0) {
-    return { eligible: false, missingInfo }
+  // If we're missing CRITICAL info (age, location, situation), mark as potentially eligible
+  // But if we only have non-critical missing info (duration, school status, etc.),
+  // assume they're eligible - we can ask those details later if they're interested
+  if (criticalMissingInfo.length > 0) {
+    return { eligible: false, missingInfo: criticalMissingInfo }
   }
 
-  // All checks passed
+  // All critical checks passed - they're eligible!
+  // (Even if we're missing optional info like duration, hasId, etc.)
   return { eligible: true }
 }
 

@@ -7,6 +7,7 @@ import ResourceCard from './ResourceCard'
 import IneligibleResourceCard from './IneligibleResourceCard'
 import PotentiallyEligibleResourceCard from './PotentiallyEligibleResourceCard'
 import ResourceDetailModal from './ResourceDetailModal'
+import CategorySuggestions from './CategorySuggestions'
 import './ResourcesDisplay.css'
 
 interface ResourcesDisplayProps {
@@ -55,18 +56,65 @@ export default function ResourcesDisplay({
     }
   }, [])
 
+  // Separate resources by urgency and priority
+  const urgentResources = classification.eligible.filter(r => r.urgent)
+  const highPriorityResources = classification.eligible.filter(r => !r.urgent && r.priority === 'high')
+  const otherEligibleResources = classification.eligible.filter(r => !r.urgent && r.priority !== 'high')
+
   return (
     <>
       <div className="resources-display" id="resources-top">
-        {classification.eligible.length > 0 && (
-          <div id="eligible-resources-section" className="resource-section">
-            <h3 className="section-title eligible-title">
-              ✅ {format('resourcesEligible', { count: classification.eligible.length })}
+        {/* URGENT RESOURCES - Show first */}
+        {urgentResources.length > 0 && (
+          <div className="resource-section urgent-section">
+            <h3 className="section-title urgent-title">
+              🚨 {language === 'es' ? 'Recursos Urgentes - Disponibles Ahora' : 'Urgent Resources - Available Now'}
+            </h3>
+            <p className="section-description urgent-description">
+              {language === 'es'
+                ? 'Estos recursos están disponibles 24/7 o pueden ayudarte hoy mismo.'
+                : 'These resources are available 24/7 or can help you today.'}
+            </p>
+            <div className="resources-container">
+              {urgentResources.map((resource) => (
+                <ResourceCard
+                  key={resource.id}
+                  resource={resource}
+                  onLearnMore={handleResourceSelected}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* HIGH PRIORITY RESOURCES */}
+        {highPriorityResources.length > 0 && (
+          <div className="resource-section high-priority-section">
+            <h3 className="section-title high-priority-title">
+              💚 {language === 'es' ? 'Recomendado para Ti' : 'Recommended for You'}
             </h3>
             <div className="resources-container">
-              {classification.eligible.map((resource) => (
-                <ResourceCard 
-                  key={resource.id} 
+              {highPriorityResources.map((resource) => (
+                <ResourceCard
+                  key={resource.id}
+                  resource={resource}
+                  onLearnMore={handleResourceSelected}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* OTHER ELIGIBLE RESOURCES */}
+        {otherEligibleResources.length > 0 && (
+          <div id="eligible-resources-section" className="resource-section">
+            <h3 className="section-title eligible-title">
+              ✅ {format('resourcesEligible', { count: otherEligibleResources.length })}
+            </h3>
+            <div className="resources-container">
+              {otherEligibleResources.map((resource) => (
+                <ResourceCard
+                  key={resource.id}
                   resource={resource}
                   onLearnMore={handleResourceSelected}
                 />
@@ -118,6 +166,16 @@ export default function ResourcesDisplay({
           </details>
         </div>
       )}
+
+        {/* Category Suggestions */}
+        <CategorySuggestions
+          responses={responses}
+          onCategoryExplore={(category) => {
+            // Scroll to top and potentially filter by category
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+            alert(`Exploring ${category} resources... (Feature can be enhanced to filter resources by category)`)
+          }}
+        />
       </div>
 
       {selectedResource && (
